@@ -1,6 +1,10 @@
 
-## Notes:
-Not workin yet, the working version will be updated soon. This is heavily modified version of KerasSharp repo, for use of Unity with TensorflowSharp. A lot of stuff is removed/added for Unity.
+# Notes:
+Still work in progress. This is heavily modified version of KerasSharp repo, for use of Unity with TensorflowSharp. A lot of stuff is removed/added for Unity.
+Usage:
+1. Copy the whole repo to Assets folder of Unity project.
+2. Import the TensorflowSharp asset: 
+https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Using-TensorFlow-Sharp-in-Unity.md
 
 # Keras Sharp
 
