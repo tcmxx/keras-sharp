@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,24 +25,18 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 namespace KerasSharp.Engine.Topology
 {
-    using KerasSharp.Engine.Topology;
     using System.Collections.Generic;
-    using KerasSharp.Constraints;
-    using KerasSharp.Layers;
     using System;
     using System.Diagnostics;
     using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    
+    using static Backends.Current;
 
-    using static KerasSharp.Backends.Current;
-    using static KerasSharp.Python;
     using Accord.Math;
+    using KerasSharp.Constraints;
     using KerasSharp.Regularizers;
+    using KerasSharp.Layers;
 
     /// <summary>
     ///   A Container is a directed acyclic graph of layers.
@@ -139,7 +135,11 @@ namespace KerasSharp.Engine.Topology
             foreach (Tensor x in this.inputs)
             {
                 // Check that x is an input tensor.
-                var (layer, node_index, tensor_index) = x._keras_history.Value;
+                //var (layer, node_index, tensor_index) = x._keras_history.Value;
+
+                var history = x._keras_history.Value;
+                var layer = history.Item1; //var node_index = history.Item2;var tensor_index = history.Item3;
+
 
                 if (layer.inbound_nodes.Count > 1 || (layer.inbound_nodes != null && layer.inbound_nodes[0].inbound_layers != null))
                 {
@@ -150,7 +150,10 @@ namespace KerasSharp.Engine.Topology
 
             foreach (Tensor x in this.outputs)
             {
-                var (layer, node_index, tensor_index) = x._keras_history.Value;
+                //var (layer, node_index, tensor_index) = x._keras_history.Value;
+                var history = x._keras_history.Value;
+                var layer = history.Item1; var node_index = history.Item2; var tensor_index = history.Item3;
+
                 this.output_layers.Add(layer);
                 this.output_layers_node_indices.Add(node_index);
                 this.output_layers_tensor_indices.Add(tensor_index);
@@ -160,19 +163,25 @@ namespace KerasSharp.Engine.Topology
             var masks = new List<Tensor>();
             foreach (Tensor x in this.inputs)
             {
-                var (layer, node_index, tensor_index) = x._keras_history.Value;
+                //var (layer, node_index, tensor_index) = x._keras_history.Value;
+                var history = x._keras_history.Value;
+                var layer = history.Item1; var node_index = history.Item2; var tensor_index = history.Item3;
+
                 Node node = layer.inbound_nodes[node_index];
                 Tensor mask = node.output_masks[tensor_index];
                 masks.Add(mask);
             }
 
-            string mask_cache_key = String.Join(",", this.inputs.Select(x => str(id(x))));
-            mask_cache_key += "_" + String.Join(",", masks.Select(x => str(id(x))));
+            string mask_cache_key = String.Join(",", this.inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
+            mask_cache_key += "_" + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
 
             masks = new List<Tensor>();
             foreach (Tensor x in this.outputs)
             {
-                var (layer, node_index, tensor_index) = x._keras_history.Value;
+                //var (layer, node_index, tensor_index) = x._keras_history.Value;
+                var history = x._keras_history.Value;
+                var layer = history.Item1; var node_index = history.Item2; var tensor_index = history.Item3;
+
                 Node node = layer.inbound_nodes[node_index];
                 Tensor mask = node.output_masks[tensor_index];
                 masks.Add(mask);
@@ -184,7 +193,10 @@ namespace KerasSharp.Engine.Topology
             // Build this.input_layers:
             foreach (Tensor x in this.inputs)
             {
-                var (layer, node_index, tensor_index) = x._keras_history.Value;
+                //var (layer, node_index, tensor_index) = x._keras_history.Value;
+                var history = x._keras_history.Value;
+                var layer = history.Item1; var node_index = history.Item2; var tensor_index = history.Item3;
+
                 // It's supposed to be an input layer, so only one node
                 // and one tensor output.
                 Trace.Assert(node_index == 0);
@@ -222,8 +234,8 @@ namespace KerasSharp.Engine.Topology
             foreach (var layer in this.output_layers)
                 this.output_names.Add(layer.name);
 
-            this.internal_input_shapes = this.inputs.Select(x => x._keras_shape).ToArray();
-            this.internal_output_shapes = this.outputs.Select(x => x._keras_shape).ToArray();
+            this.internal_input_shapes = this.inputs.Select(x => x._keras_shape).ToList().ToArray();
+            this.internal_output_shapes = this.outputs.Select(x => x._keras_shape).ToList().ToArray();
 
             // Container_nodes: set of nodes included in the graph
             // (not all nodes included in the layers
@@ -234,7 +246,7 @@ namespace KerasSharp.Engine.Topology
             var layer_indices = new Dictionary<Layer, int>();  // dict {layer: index in traversal}
             List<Node> nodes_in_decreasing_depth = new List<Node>();
 
-            /// <summary>
+            /*/// <summary>
             ///   Builds a map of the graph of layers.
             /// </summary>
             /// <remarks>
@@ -247,12 +259,14 @@ namespace KerasSharp.Engine.Topology
             /// <param name="node_index">Node index from which `tensor` comes from.</param>
             /// <param name="tensor_index">Tensor_index from which `tensor` comes from.</param>
             ///			
-            void build_map_of_graph(Tensor tensor, HashSet<Node> finished_nodes = null, HashSet<Node> nodes_in_progress = null,
+            void build_map_of_graph(UnityTFTensor tensor, HashSet<Node> finished_nodes = null, HashSet<Node> nodes_in_progress = null,
                                        Layer layer = null, int? node_index = null, int? tensor_index = null)
             {
-                if (layer == null || node_index == null || tensor_index == null)
-                    (layer, node_index, tensor_index) = tensor._keras_history.Value;
-
+                if (layer == null || node_index == null || tensor_index == null) {
+                    //(layer, node_index, tensor_index) = tensor._keras_history.Value;
+                    var history = tensor.KerasHistory.Value;
+                    layer = history.Item1; node_index = history.Item2; tensor_index = history.Item3;
+                }
                 Node node = layer.inbound_nodes[node_index.Value];
 
                 // Prevent cycles.
@@ -277,7 +291,7 @@ namespace KerasSharp.Engine.Topology
                 // Propagate to all previous tensors connected to this node.
                 for (int i = 0; i < node.inbound_layers.Count; i++)
                 {
-                    Tensor x = node.input_tensors[i];
+                    UnityTFTensor x = node.input_tensors[i];
                     layer = node.inbound_layers[i];
                     node_index = node.node_indices[i];
                     tensor_index = node.tensor_indices[i];
@@ -289,13 +303,13 @@ namespace KerasSharp.Engine.Topology
 
                 nodes_in_decreasing_depth.Add(node);
                 return;
-            }
+            }*/
 
             {
                 var finished_nodes = new HashSet<Node>();
                 var nodes_in_progress = new HashSet<Node>();
                 foreach (var x in this.outputs)
-                    build_map_of_graph(x, finished_nodes, nodes_in_progress);
+                    build_map_of_graph(container_nodes, x, layer_indices, nodes_in_decreasing_depth, finished_nodes, nodes_in_progress);
 
                 int depth = 0;
                 foreach (Node node in Enumerable.Reverse(nodes_in_decreasing_depth))
@@ -442,6 +456,68 @@ namespace KerasSharp.Engine.Topology
                 this.built = true;
             }
         }
+
+
+        /// <summary>
+        ///   Builds a map of the graph of layers.
+        /// </summary>
+        /// <remarks>
+        ///   This recursively updates the map `layer_indices`, the list `nodes_in_decreasing_depth` and the set `container_nodes`.
+        /// </remarks>
+        /// 
+        /// <param name="finished_nodes">Set of nodes whose subgraphs have been traversed completely.Useful to prevent duplicated work.</param>
+        /// <param name="nodes_in_progress">Set of nodes that are currently active on the recursion stack.Useful to detect cycles.</param>
+        /// <param name="layer">Layer from which `tensor` comes from. If not provided, will be obtained from `tensor._keras_history`.</param>
+        /// <param name="node_index">Node index from which `tensor` comes from.</param>
+        /// <param name="tensor_index">Tensor_index from which `tensor` comes from.</param>
+        ///			
+        void build_map_of_graph(HashSet<string> result_container_nodes, Tensor tensor, Dictionary<Layer, int> layer_indices, List<Node> nodes_in_decreasing_depth, HashSet<Node> finished_nodes = null, HashSet<Node> nodes_in_progress = null,
+                                   Layer layer = null, int? node_index = null, int? tensor_index = null)
+        {
+            if (layer == null || node_index == null || tensor_index == null)
+            {
+                //(layer, node_index, tensor_index) = tensor._keras_history.Value;
+                var history = tensor._keras_history.Value;
+                layer = history.Item1; node_index = history.Item2; tensor_index = history.Item3;
+            }
+            Node node = layer.inbound_nodes[node_index.Value];
+
+            // Prevent cycles.
+            if (nodes_in_progress.Contains(node))
+                throw new Exception("The tensor ' + str(tensor) + ' at layer " + layer.name + " is part of a cycle.");
+
+            // Don't repeat work for shared subgraphs
+            if (finished_nodes.Contains(node))
+                return;
+
+            string node_key = layer.name + "_ib-" + node_index;
+
+            // Update container_nodes.
+            result_container_nodes.Add(node_key);
+
+            // Store the traversal order for layer sorting.
+            if (!layer_indices.ContainsKey(layer))
+                layer_indices[layer] = layer_indices.Count;
+
+            nodes_in_progress.Add(node);
+
+            // Propagate to all previous tensors connected to this node.
+            for (int i = 0; i < node.inbound_layers.Count; i++)
+            {
+                Tensor x = node.input_tensors[i];
+                layer = node.inbound_layers[i];
+                node_index = node.node_indices[i];
+                tensor_index = node.tensor_indices[i];
+                build_map_of_graph(result_container_nodes, x, layer_indices, nodes_in_decreasing_depth, finished_nodes, nodes_in_progress, layer, node_index, tensor_index);
+            }
+
+            finished_nodes.Add(node);
+            nodes_in_progress.Remove(node);
+
+            nodes_in_decreasing_depth.Add(node);
+            return;
+        }
+
 
 
         /// <summary>
@@ -715,7 +791,7 @@ namespace KerasSharp.Engine.Topology
         /// 
         public override void set_weights(List<Array> weights)
         {
-            var tuples = new List<(Tensor, Array)>();
+            var tuples = new List<ValueTuple<Tensor, Array>>();
             foreach (var layer in this.layers)
             {
                 int num_param = layer.weights.Count;
@@ -724,7 +800,7 @@ namespace KerasSharp.Engine.Topology
                 {
                     var sw = layer.weights[i];
                     var w = layer_weights[i];
-                    tuples.Add((sw, w));
+                    tuples.Add(ValueTuple.Create(sw, w));
                 }
                 weights = weights.ToArray().Get(num_param, 0).ToList();
             }
@@ -779,14 +855,15 @@ namespace KerasSharp.Engine.Topology
             if (mask == null)
                 masks = inputs.Select(x => (Tensor)x).ToList();
 
-            string cache_key = String.Join(",", inputs.Select(x => str(id(x))));
-            cache_key += '_' + String.Join(",", masks.Select(x => str(id(x))));
+            string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
+            cache_key += '_' + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
 
             if (this._output_tensor_cache.ContainsKey(cache_key))
                 return this._output_tensor_cache[cache_key];
 
-            var (output_tensors, _, _) = this.run_internal_graph(inputs, masks);
-            return output_tensors;
+            var result = this.run_internal_graph(inputs, masks);
+            //var (output_tensors, _, _) = this.run_internal_graph(inputs, masks);
+            return result.Item1;
         }
 
         public override List<Tensor> compute_mask(List<Tensor> inputs, List<Tensor> mask)
@@ -794,14 +871,15 @@ namespace KerasSharp.Engine.Topology
             if (mask == null)
                 masks = inputs.Select(x => (Tensor)null).ToList();
 
-            string cache_key = String.Join(",", inputs.Select(x => str(id(x))));
-            cache_key += '_' + String.Join(",", masks.Select(x => str(id(x))));
+            string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
+            cache_key += '_' + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
 
             if (this._output_mask_cache.ContainsKey(cache_key))
                 return this._output_mask_cache[cache_key];
 
-            var (_, output_masks, _) = this.run_internal_graph(inputs, masks);
-            return output_masks;
+            //var (_, output_masks, _) = this.run_internal_graph(inputs, masks);
+            var result = this.run_internal_graph(inputs, masks);
+            return result.Item2;
         }
 
         public override List<int?[]> compute_output_shape(List<int?[]> input_shapes)
@@ -809,7 +887,7 @@ namespace KerasSharp.Engine.Topology
             if (input_shapes.Count != this.input_layers.Count)
                 throw new Exception($"Invalid input_shape argument {input_shape}: model has {this.input_layers.Count} tensor inputs.");
 
-            string cache_key = String.Join(",", input_shapes.Select(x => str(x)));
+            string cache_key = String.Join(",", input_shapes.Select(x => UnityTFUtils.ToString(x)));
             if (this._output_shape_cache.ContainsKey(cache_key))
                 return this._output_shape_cache[cache_key];
 
@@ -913,7 +991,7 @@ namespace KerasSharp.Engine.Topology
         ///
         /// <returns>Three lists: output_tensors, output_masks, output_shapes</returns>
         ///
-        public (List<Tensor>, List<Tensor>, List<int?[]>) run_internal_graph(List<Tensor> inputs, List<Tensor> masks = null)
+        public ValueTuple<List<Tensor>, List<Tensor>, List<int?[]>> run_internal_graph(List<Tensor> inputs, List<Tensor> masks = null)
         {
             if (masks == null)
                 masks = inputs.Select(x => (Tensor)null).ToList();
@@ -923,7 +1001,7 @@ namespace KerasSharp.Engine.Topology
             // we assume a 1:1 mapping from tensor to mask
             // TODO: raise exception when a '.compute_mask()' call
             // does not return a list the same size as 'call'
-            var tensor_map = new Dictionary<long, (Tensor, Tensor)>();
+            var tensor_map = new Dictionary<long, ValueTuple<Tensor, Tensor>>();
 
             for (int i = 0; i < this.inputs.Count; i++)
             {
@@ -931,7 +1009,7 @@ namespace KerasSharp.Engine.Topology
                 Tensor y = inputs[i];
                 Tensor mask = masks[i];
 
-                tensor_map[id(x)] = (y, mask);
+                tensor_map[UnityTFUtils.GetId(x)] = ValueTuple.Create(y, mask);
 
                 var depth_keys = this.nodes_by_depth.Keys.ToList();
                 depth_keys.Sort();
@@ -949,11 +1027,11 @@ namespace KerasSharp.Engine.Topology
 
                         // If all previous input tensors are available in tensor_map,
                         // then call node.inbound_layer on them.
-                        var computed_data = new List<(Tensor, Tensor)>();  // List of tuples (input, mask).
+                        var computed_data = new List<ValueTuple<Tensor, Tensor>>();  // List of tuples (input, mask).
                         foreach (Tensor t in reference_input_tensors)
                         {
-                            if (tensor_map.ContainsKey(id(t)))
-                                computed_data.Add(tensor_map[id(t)]);
+                            if (tensor_map.ContainsKey(UnityTFUtils.GetId(t)))
+                                computed_data.Add(tensor_map[UnityTFUtils.GetId(t)]);
                         }
 
                         if (computed_data.Count == reference_input_tensors.Count)
@@ -968,7 +1046,10 @@ namespace KerasSharp.Engine.Topology
                                 List<Tensor> output_masks;
                                 if (computed_data.Count == 1)
                                 {
-                                    var (computed_tensor, computed_mask) = computed_data[0];
+                                    //var (computed_tensor, computed_mask) = computed_data[0];
+                                    var computed = computed_data[0];
+                                    var computed_tensor = computed.Item1; var computed_mask = computed.Item2;
+
                                     output_tensors = layer.Call(computed_tensor);
                                     output_masks = layer.compute_mask(computed_tensor, computed_mask);
                                     computed_tensors = new List<Tensor>() { computed_tensor };
@@ -1028,7 +1109,7 @@ namespace KerasSharp.Engine.Topology
                                     var xt = reference_output_tensors[j];
                                     var yt = output_tensors[j];
                                     var mt = output_masks[j];
-                                    tensor_map[id(xt)] = (yt, mt);
+                                    tensor_map[UnityTFUtils.GetId(xt)] = ValueTuple.Create(yt, mt);
                                 }
                             }
                         }
@@ -1043,8 +1124,11 @@ namespace KerasSharp.Engine.Topology
 
                 foreach (Tensor x in this.outputs)
                 {
-                    Trace.Assert(tensor_map.ContainsKey(id(x)), $"Could not compute output {x}");
-                    var (tensor, mask) = tensor_map[id(x)];
+                    Trace.Assert(tensor_map.ContainsKey(UnityTFUtils.GetId(x)), $"Could not compute output {x}");
+                    //var (tensor, mask) = tensor_map[UnityTFUtils.GetId(x)];
+                    var data = tensor_map[UnityTFUtils.GetId(x)];
+                    var tensor = data.Item1; var mask = data.Item2;
+
                     if (tensor._keras_shape != null && output_shapes != null)
                     {
                         var shape = tensor._keras_shape;
@@ -1061,8 +1145,8 @@ namespace KerasSharp.Engine.Topology
 
                 // Update cache;
                 // keys are based on ids on input tensors and inputs masks.
-                string cache_key = String.Join(",", inputs.Select(x => str(id(x))));
-                cache_key += "_" + String.Join(",", masks.Select(x => str(id(x))));
+                string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
+                cache_key += "_" + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
 
                 this._output_tensor_cache[cache_key] = output_tensors;
                 this._output_mask_cache[cache_key] = output_masks;
@@ -1070,7 +1154,7 @@ namespace KerasSharp.Engine.Topology
                 if (output_shapes != null)
                 {
                     var input_shapes = inputs.Select(x => x._keras_shape).ToList();
-                    cache_key = String.Join(",", input_shapes.Select(x => str(x)));
+                    cache_key = String.Join(",", input_shapes.Select(x => UnityTFUtils.ToString(x)));
                     this._output_shape_cache[cache_key] = output_shapes;
                 }
                 else
@@ -1078,7 +1162,7 @@ namespace KerasSharp.Engine.Topology
                     this._output_shape_cache[cache_key] = output_shapes;
                 }
 
-                return (output_tensors, output_masks, output_shapes);
+                return ValueTuple.Create(output_tensors, output_masks, output_shapes);
             }
         }
 
@@ -1101,8 +1185,12 @@ namespace KerasSharp.Engine.Topology
 
 
             if (layer == null || node_index == null)
-                (layer, node_index, _) = tensor._keras_history.Value;
-
+            {
+                var history = tensor._keras_history.Value;
+                layer = history.Item1;
+                node_index = history.Item2;
+                //(layer, node_index, _) = tensor._keras_history.Value;
+            }
             if (layer.inbound_nodes.Count == 0)
                 return new List<Tensor>() { tensor };
 
@@ -1141,7 +1229,7 @@ namespace KerasSharp.Engine.Topology
 
         public static string _object_list_uid(List<Tensor> object_list)
         {
-            return string.Join(", ", object_list.Select(x => str(id(x))));
+            return string.Join(", ", object_list.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
         }
 
 
@@ -1163,9 +1251,10 @@ namespace KerasSharp.Engine.Topology
             {
                 if (x._keras_history.HasValue)
                 {
-                    var (inbound_layer, node_index, tensor_index) = x._keras_history.Value;
-                    var node = inbound_layer.inbound_nodes[node_index];
-                    var mask = node.output_masks[tensor_index];
+                    var history = x._keras_history.Value;
+                    //var (inbound_layer, node_index, tensor_index) = x.KerasHistory.Value;
+                    var node = history.Item1.inbound_nodes[history.Item2];
+                    var mask = node.output_masks[history.Item3];
                     masks.Add(mask);
                 }
                 else

@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,23 +26,19 @@
 //    SOFTWARE.
 //
 
+
 namespace KerasSharp
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-
     using System.Runtime.Serialization;
-    using KerasSharp.Constraints;
-    using KerasSharp.Regularizers;
-    using KerasSharp.Initializers;
     using Accord.Math;
+    using KerasSharp.Constraints;
     using KerasSharp.Engine.Topology;
-
-    using static KerasSharp.Backends.Current;
-
+    using KerasSharp.Initializers;
+    using KerasSharp.Regularizers;
+    using static Backends.Current;
 
     /// <summary>
     ///   Just your regular densely-connected NN layer.
@@ -124,7 +122,7 @@ namespace KerasSharp
             this.supports_masking = true;
         }
 
-        /// <summary>
+        /*/// <summary>
         /// Initializes a new instance of the <see cref="Dense"/> class.
         /// </summary>
         /// 
@@ -146,7 +144,7 @@ namespace KerasSharp
                    kernel_constraint: kernel_constraint, bias_constraint: bias_constraint,
                    input_dim: input_dim, input_shape: input_shape, batch_input_shape: batch_input_shape)
         {
-        }
+        }*/
 
         protected override void build(List<int?[]> input_shape)
         {

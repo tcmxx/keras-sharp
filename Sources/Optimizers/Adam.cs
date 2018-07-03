@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -28,14 +30,13 @@ namespace KerasSharp.Optimizers
 {
     using KerasSharp.Constraints;
     using KerasSharp.Engine.Topology;
-    using KerasSharp.Losses;
     using KerasSharp.Models;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.Serialization;
 
-    using static KerasSharp.Backends.Current;
+    using static Backends.Current;
 
     [DataContract]
     public class Adam : OptimizerBase, IOptimizer
@@ -72,7 +73,7 @@ namespace KerasSharp.Optimizers
 
                 Tensor t = this.iterations + 1;
                 Tensor lr_t = K.mul(lr, (K.sqrt(1 - K.pow(this.beta_2, t)) /
-                             (1 - K.pow(this.beta_1, t))), name: "lr_t");
+                                 (1 - K.pow(this.beta_1, t))), name: "lr_t");
 
                 var shapes = param.Select(p => K.get_variable_shape(p));
                 var ms = shapes.Select(shape => K.zeros(shape)).ToArray();
@@ -96,7 +97,7 @@ namespace KerasSharp.Optimizers
 
                         var new_p = p_t;
                         // apply constraints
-                        if (constraints.Keys.Contains(p))
+                        if (constraints != null && constraints.Keys.Contains(p))
                         {
                             var c = constraints[p];
                             new_p = c.Call(new_p);
@@ -108,6 +109,11 @@ namespace KerasSharp.Optimizers
 
                 return this.updates;
             }
+        }
+
+        public void SetLearningRate(float lr)
+        {
+            K.set_value(this.lr, new float[] { lr });
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,21 +27,16 @@
 //    SOFTWARE.
 //
 
+
 namespace KerasSharp.Activations
 {
-    using static KerasSharp.Backends.Current;
-
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    
-    using System.Runtime.Serialization;
     using KerasSharp.Engine.Topology;
+    using System;
+    using System.Runtime.Serialization;
+    using static Backends.Current;
 
     /// <summary>
-    ///   Softmax activation function.
+    ///   Sigmoid activation function.
     /// </summary>
     /// 
     /// <seealso cref="KerasSharp.IActivationFunction" />
@@ -56,7 +54,6 @@ namespace KerasSharp.Activations
             : this(-1)
         {
         }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Softmax"/> class.
         /// </summary>
@@ -67,14 +64,12 @@ namespace KerasSharp.Activations
         {
             this.axis = axis;
         }
-
         /// <summary>
         /// Wires the activation function to the graph.
         /// </summary>
         /// <param name="x">The input tensor.</param>
         /// <returns>The output tensor with the activation function applied.</returns>
-        /// <exception cref="System.ArgumentException">Cannot apply softmax to a tensor that is 1D</exception>
-        public override Tensor Call(Tensor x, Tensor mask = null)
+        public override Tensor Call(Tensor x, Tensor mask)
         {
             int? ndim = K.ndim(x);
             if (ndim == 2)

@@ -1,4 +1,7 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,17 +26,14 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 namespace KerasSharp.Backends
 {
+    using KerasSharp.Engine.Topology;
+    using KerasSharp.Models;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
-    using KerasSharp.Engine.Topology;
-    using KerasSharp.Losses;
-    using KerasSharp.Models;
 
     public interface IBackend : IDisposable
     {
@@ -52,6 +52,10 @@ namespace KerasSharp.Backends
 
 
         Tensor clip(Tensor norms, int v, int maxValue);
+        Tensor clip(Tensor norms, double min_value, double max_value);
+        Tensor clip(Tensor norms, Tensor min_value, Tensor max_value);
+        Tensor clip_norm(Tensor g, double clipnorm, Tensor norm);
+
 
         Tensor zeros(int[] shape, DataType? dtype = null, string name = null);
 
@@ -65,22 +69,23 @@ namespace KerasSharp.Backends
         void clear_session();
 
         Tensor cast(Tensor x, DataType dataType);
-        
 
-        Tensor dropout(object p, double retain_prob, object noise_shape, object seed);
+        Tensor concat(List<Tensor> tensors, int axis);
+
+
+        Tensor dropout(Tensor p, double keep_prob, int[] noise_shape, int? seed);
 
         Tensor relu(Tensor x);
 
         Tensor softmax(Tensor x);
 
 
-        Tensor max(Tensor x, int v, object p);
 
         Tensor reshape(Tensor x, int[] shape);
 
         int? ndim(Tensor x);
 
-        Tensor max(Tensor x, int axis, bool keepdims);
+
 
 
         Tensor elu(Tensor x);
@@ -129,12 +134,15 @@ namespace KerasSharp.Backends
 
         Tensor dot(Tensor a, Tensor b, string name = null);
 
+        Tensor one_hot(Tensor x, Tensor depth, Tensor on, Tensor off);
 
         Tensor elu(Tensor x, double alpha);
 
         Tensor sigmoid(Tensor x);
 
         Tensor softplus(Tensor x);
+
+        Tensor log(Tensor x);
 
         Tensor print_tensor(Tensor x, string message);
 
@@ -147,13 +155,6 @@ namespace KerasSharp.Backends
         Tensor exp(Tensor x);
 
         object eval(Tensor tensor);
-
-
-
-
-        Tensor clip(Tensor norms, double min_value, double max_value);
-
-
 
         Tensor random_uniform(int[] shape, double minval = 0.0, double maxval = 1.0, DataType? dtype = null, int? seed = null, string name = null);
 
@@ -170,13 +171,14 @@ namespace KerasSharp.Backends
         Tensor categorical_crossentropy(Tensor target, Tensor output, bool from_logits = false);
 
         Tensor max(Tensor tensor, int axis);
-
+        Tensor max(Tensor x, int v, object p);
+        Tensor max(Tensor x, int axis, bool keepdims);
         Tensor maximum(double v, Tensor tensor);
 
+        Tensor min(Tensor a, Tensor b);
+        Tensor min(Tensor x, int axis, bool keepdims);
+
         Tensor binary_crossentropy(Tensor output, Tensor target, bool from_logits = false);
-
-
-
 
         Tensor variable(Array array, DataType? dtype = null, string name = null);
 
@@ -201,13 +203,15 @@ namespace KerasSharp.Backends
 
         NameScope name_scope(string name);
 
-        Tensor clip_norm(Tensor g, double clipnorm, Tensor norm);
+
 
         Tensor identity(Tensor x, string name = null);
 
         List<Array> batch_get_value(List<Tensor> weights);
 
-        void batch_set_value(List<Tuple<Tensor, Array>> weight_value_tuples);
+        void set_value(Tensor input, Array value);
+        Array get_value(Tensor x);
+
 
         Tensor placeholder(int?[] shape = null, int? ndim = null, DataType? dtype = null, bool sparse = false, string name = null);
 
@@ -215,7 +219,7 @@ namespace KerasSharp.Backends
 
         List<Array> batch_get_value(List<List<Tensor>> weights);
 
-        void batch_set_value(List<(Tensor, Array)> tuples);
+        void batch_set_value(List<ValueTuple<Tensor, Array>> tuples);
 
         Tensor update_add<T>(Tensor x, T increment, string name = null) where T : struct;
 
@@ -238,6 +242,7 @@ namespace KerasSharp.Backends
         Tensor truncated_normal(int?[] shape, double v, double stddev, DataType? dtype, int? seed);
 
         Tensor not_equal<T>(Tensor weights, T v) where T : struct;
+        Tensor not_equal(Tensor x, Tensor y);
 
         Tensor bias_add(Tensor output, Tensor bias, DataFormatType? data_format = null, string name = null);
 
@@ -246,5 +251,11 @@ namespace KerasSharp.Backends
         Tensor conv2d(Tensor inputs, Tensor kernel, int[] strides, PaddingType padding, DataFormatType? data_format, int[] dilation_rate, string name = null);
 
         Tensor conv3d(Tensor inputs, Tensor kernel, int[] strides, PaddingType padding, DataFormatType? data_format, int[] dilation_rate, string name = null);
+
+        Tensor pool2D(Tensor input, int[] poolSize, int[] strides,
+                   PaddingType padding, DataFormatType? dataFormat = null,
+                   PoolMode poolMode = PoolMode.Max);
+
+
     }
 }

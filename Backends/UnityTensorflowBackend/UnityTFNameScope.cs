@@ -1,4 +1,7 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,31 +27,28 @@
 //    SOFTWARE.
 //
 
-namespace KerasSharp
+namespace KerasSharp.Backends
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    
-    using System.Runtime.Serialization;
-    using KerasSharp.Constraints;
-    using KerasSharp.Regularizers;
-    using KerasSharp.Initializers;
-    using Accord.Math;
     using KerasSharp.Engine.Topology;
+    using System;
+    using TensorFlow;
 
-    using static KerasSharp.Backends.Current;
-
-
-    [DataContract]
-    public class GRU : Layer
+    public class TensorFlowNameScope : NameScope, IDisposable
     {
-        public GRU()
+        string name;
+        TFScope scope;
+
+        public override string Name { get { return name; } }
+
+        public TensorFlowNameScope(TFScope scope, string name)
         {
-            // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/layers/recurrent.py#L630
-            throw new NotImplementedException();
+            this.scope = scope;
+            this.name = name;
+        }
+
+        public override void Dispose()
+        {
+            scope.Dispose();
         }
     }
 }

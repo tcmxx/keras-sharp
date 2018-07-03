@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -37,7 +39,7 @@ namespace KerasSharp.Models
         private int target;
         private Progbar progbar;
         private int seen;
-        private List<(string, object)> log_values;
+        private List<ValueTuple<string, object>> log_values;
 
         public ProgbarLogger()
         {
@@ -62,14 +64,14 @@ namespace KerasSharp.Models
         public override void on_batch_begin(Dictionary<string, object> logs)
         {
             if (this.seen < this.target)
-                this.log_values = new List<(string, object)>();
+                this.log_values = new List<ValueTuple<string, object>>();
         }
 
         public override void on_batch_end(Dictionary<string, object> logs)
         {
             if (logs == null)
                 logs = new Dictionary<string, object>();
-            int batch_size = (int)logs.get("size", 0);
+            int batch_size = (int)logs.TryGetOr("size", 0);
             if (this.use_steps)
                 this.seen += 1;
             else
@@ -78,7 +80,7 @@ namespace KerasSharp.Models
             foreach (string k in (IEnumerable<string>)this.parameters["metrics"])
             {
                 if (logs.ContainsKey(k))
-                    this.log_values.Add((k, logs[k]));
+                    this.log_values.Add(ValueTuple.Create(k, logs[k]));
             }
 
             // Skip progbar update for the last batch;
@@ -111,7 +113,7 @@ namespace KerasSharp.Models
             foreach (string k in (IEnumerable<string>)this.parameters["metrics"])
             {
                 if (logs.ContainsKey(k))
-                    this.log_values.Add((k, logs[k]));
+                    this.log_values.Add(ValueTuple.Create(k, logs[k]));
             }
 
             if (this.verbose > 0)

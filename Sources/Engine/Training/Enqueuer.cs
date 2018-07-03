@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,10 +26,9 @@
 //    SOFTWARE.
 //
 
+using KerasSharp.Engine.Topology;
 using System;
 using System.Collections.Generic;
-using KerasSharp.Engine.Topology;
-
 namespace KerasSharp.Models
 {
     internal class Enqueuer

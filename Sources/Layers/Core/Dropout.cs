@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,18 +25,12 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 namespace KerasSharp.Activations
 {
-    using Accord.Math.Random;
     using KerasSharp.Engine.Topology;
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Runtime.Serialization;
-    using System.Text;
-    using System.Threading.Tasks;
-    using static KerasSharp.Backends.Current;
+    using static Backends.Current;
 
     /// <summary>
     ///   Applies Dropout to the input.
@@ -84,7 +80,7 @@ namespace KerasSharp.Activations
                 var noise_shape = this._get_noise_shape(inputs);
                 return K.in_train_phase(
                     () => K.dropout(inputs, this.rate, noise_shape, seed: this.seed),
-                    () => inputs, 
+                    () => inputs,
                     training: training);
             }
 

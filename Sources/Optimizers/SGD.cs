@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -28,14 +30,12 @@ namespace KerasSharp.Optimizers
 {
     using KerasSharp.Constraints;
     using KerasSharp.Engine.Topology;
-    using KerasSharp.Losses;
     using KerasSharp.Models;
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.Serialization;
 
-    using static KerasSharp.Backends.Current;
+    using static Backends.Current;
 
 
     /// <summary>

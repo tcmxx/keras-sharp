@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -30,12 +32,7 @@ namespace KerasSharp.Layers
     using KerasSharp.Engine.Topology;
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    
-
-    using static KerasSharp.Backends.Current;
+    using static Backends.Current;
 
 
     /// <summary>
@@ -82,7 +79,6 @@ namespace KerasSharp.Layers
             this.trainable = false;
             this.built = true;
             this.sparse = sparse;
-
             if (input_shape != null && batch_input_shape != null)
                 throw new Exception("Only provide the input_shape OR batch_input_shape argument to  InputLayer, not both at the same time.");
 
@@ -114,7 +110,7 @@ namespace KerasSharp.Layers
 
 
             this.batch_input_shape = batch_input_shape;
-            this.dtype = dtype.Value;
+            //this.dtype = dtype.Value;
 
 
             if (input_tensor == null)
@@ -134,7 +130,8 @@ namespace KerasSharp.Layers
             // Create an input node to add to this.outbound_node
             // and set output_tensors" _keras_history.
             input_tensor._uses_learning_phase = false;
-            input_tensor._keras_history = (this, 0, 0);
+            input_tensor._keras_history = ValueTuple.Create((Layer)this, 0, 0);
+
 
             var node = new Node(this,
                 inbound_layers: new List<Layer>(),

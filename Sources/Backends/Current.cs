@@ -1,4 +1,8 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿
+//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,89 +27,46 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 namespace KerasSharp.Backends
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using KerasSharp.Engine.Topology;
     using System.Threading;
     using System.Reflection;
 
     public static class Current
     {
-        private static ThreadLocal<IBackend> backend;
-
-        private static string[] assemblyNames =
-        {
-            "KerasSharp.Backends.TensorFlow",
-            "KerasSharp.Backends.CNTK.CPUOnly",
-            "KerasSharp.Backends.CNTK.GPU",
-        };
-
-        public static string Name = "KerasSharp.Backends.TensorFlowBackend";
+        private static IBackend backend;
 
         public static IBackend K
         {
-            get { return backend.Value; }
-            set { backend.Value = value; }
+            get { return backend; }
+            set { backend = value; }
         }
 
         static Current()
         {
-            backend = new ThreadLocal<IBackend>(() => load(Name));
-        }
-
-        public static void Switch<T>()
-        {
-            Switch(typeof(T).FullName);
-        }
-
-        public static void Switch(string backendName)
-        {
-            Name = backendName;
-            backend.Value = load(Name);
+            backend = load();
         }
 
 
-
-        private static IBackend load(string typeName)
+        private static IBackend load()
         {
-            Type type = find(typeName);
-
-            IBackend obj = (IBackend)Activator.CreateInstance(type);
-
-            return obj;
-        }
-
-        private static Type find(string typeName)
-        {
-            foreach (string assemblyName in assemblyNames)
+            //Type type = find(typeName);
+            // Type type = typeof(UnityTFBackend);
+            //IBackend obj = (IBackend)Activator.CreateInstance(type);
+            try
             {
-                try
-                {
-                    Assembly assembly = Assembly.Load(assemblyName);
-
-                    var types = assembly.GetExportedTypes();
-
-                    foreach (var type in types)
-                    {
-                        string currentTypeName = type.FullName;
-                        if (currentTypeName == typeName)
-                            return type;
-                    }
-                }
-                catch
-                {
-                    // TODO: Remove this try-catch block by a proper check
-                }
+                IBackend obj = new UnityTFBackend();
+                return obj;
             }
-
-            throw new ArgumentException("typeName");
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError("Exception in Current.load():" + e.Message);
+            }
+            return null;
         }
+
 
     }
+
 }

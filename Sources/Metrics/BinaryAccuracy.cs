@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -28,9 +30,8 @@ namespace KerasSharp.Metrics
 {
     using KerasSharp.Engine.Topology;
     using System;
-    using System.Collections.Generic;
 
-    using static KerasSharp.Backends.Current;
+    using static Backends.Current;
 
     public class BinaryAccuracy : IMetric
     {
@@ -42,7 +43,7 @@ namespace KerasSharp.Metrics
                     throw new NotSupportedException();
 
                 // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/metrics.py#L20
-                return K.mean(K.equal(y_true, K.round(y_pred)), axis: -1, name: "value");
+                return K.mean(K.cast(K.equal(y_true, K.round(y_pred)), DataType.Float), axis: -1, name: "value");
             }
         }
     }

@@ -26,37 +26,46 @@
 //    SOFTWARE.
 //
 
-namespace KerasSharp.Initializers
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TensorFlow;
+using System;
+public static class TensorFlowSharpEx
 {
-    using KerasSharp.Engine.Topology;
-    using System.Runtime.Serialization;
-    /// <summary>
-    ///   He uniform variance scaling initializer.
-    /// </summary>
-    /// <remarks>
-    ///  It draws samples from a uniform distribution within [-limit, limit] where <c>limit</c> is 
-    ///  <c>sqrt(6 / fan_in)</c> where <c>fan_in</c> is the number of input units in the weight tensor.
-    /// </remarks>
-    /// 
-    [DataContract]
-    public class HeUniform : IWeightInitializer
-    {
-        public int? seed;
 
-        /// <summary>
-        /// Creates a <see cref="TFTensor" /> with the desired initial weights.
-        /// </summary>
-        /// 
-        /// <param name="shape">The shape of the tensor to be generated.</param>
-        /// <param name="dtype">The <see cref="TFDataType">data type</see> of the tensor to be generated.</param>
-        /// <returns>A <see cref="TFTensor" /> initialized of dimensions <paramref name="shape" />
-        /// and element data type <paramref name="dtype" /> that has been initialized using this
-        /// strategy.</returns>
-        /// 
-        public Tensor Call(int[] shape, DataType? dtype = null)
+
+    // Returns range(0, rank(x)) if reduction_indices is null
+    public static TFOutput ReduceDims(this TFGraph g, TFOutput input, TFOutput? axis = null)
+    {
+        if (axis.HasValue)
+            return axis.Value;
+
+        // Fast path: avoid creating Rank and Range ops if ndims is known.
+        long[] shape = g.GetTensorShape(input).ToArray();
+        if (shape.Length >= 0)
         {
-            return new VarianceScaling(scale: 2.0, mode: "fan_in", distribution: "uniform", seed: seed).Call(shape, dtype);
+            // The python code distinguishes between tensor and sparsetensor
+
+            var array = new int[shape.Length];
+            for (int i = 0; i < array.Length; i++)
+                array[i] = i;
+
+            return g.Const(array, TFDataType.Int32);
         }
+        return g.Range(g.Const(0), g.Const(shape.Length), g.Const(1));
     }
 
+    #region Staging area - remove after those operations have been implemented in TensorFlowSharp
+
+    public static TFOutput Transpose(this TFGraph g, TFOutput a, TFOutput? perm = null, string operName = null)
+    {
+        throw new NotImplementedException("https://github.com/migueldeicaza/TensorFlowSharp/pull/178");
+    }
+
+    public static TFOutput Cond(this TFGraph g, TFOutput pred, Func<TFOutput> true_fn, Func<TFOutput> false_fn, string operName = null)
+    {
+        throw new NotImplementedException("https://github.com/migueldeicaza/TensorFlowSharp/pull/176");
+    }
+    #endregion
 }

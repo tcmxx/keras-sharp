@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -26,7 +28,6 @@
 
 using Accord;
 using Accord.Math;
-using KerasSharp.Engine.Topology;
 using System;
 using System.Collections.Generic;
 
@@ -46,7 +47,7 @@ namespace KerasSharp.Models
             if (logs == null)
                 logs = new Dictionary<string, object>();
 
-            int batch_size = (int)logs.get("size", 0);
+            int batch_size = (int)logs.TryGetOr("size", 0);
             this.seen += batch_size;
 
             foreach (var item in logs)

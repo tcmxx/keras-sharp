@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -27,23 +29,18 @@
 namespace KerasSharp.Models
 {
     using Accord.Math;
-    using KerasSharp.Engine;
+    using KerasSharp.Constraints;
     using KerasSharp.Engine.Topology;
     using KerasSharp.Layers;
     using KerasSharp.Losses;
     using KerasSharp.Metrics;
+    using KerasSharp.Regularizers;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-
-    using static KerasSharp.Backends.Current;
-    using static KerasSharp.Python;
-    using KerasSharp.Constraints;
-    using KerasSharp.Regularizers;
+    using static Backends.Current;
 
 
     /// <summary>
@@ -120,15 +117,17 @@ namespace KerasSharp.Models
                         throw new Exception("The first layer in a Sequential model must get an 'input_shape' or 'batch_input_shape' argument.");
 
                     // Instantiate the input layer.
-                    var x = Input(batch_shape: layer.batch_input_shape, dtype: layer.dtype, name: $"{layer.name}_input");
+                    var x = UnityTFUtils.Input(batch_shape: layer.batch_input_shape, dtype: layer.dtype, name: $"{layer.name}_input");
 
-                    Debug.Assert(x[0]._keras_history.Value.layer.GetType() == typeof(InputLayer));
+                    //Debug.Assert(x[0]._keras_history.Value.layer.GetType() == typeof(InputLayer));
+                    Debug.Assert(x[0]._keras_history.Value.Item1.GetType() == typeof(InputLayer));
 
                     // This will build the current layer and create the node connecting 
                     // the current layer to the input layer we just created.
                     layer.Call(x);
 
-                    Debug.Assert(x[0]._keras_history.Value.layer.GetType() == typeof(InputLayer));
+                    //Debug.Assert(x[0]._keras_history.Value.layer.GetType() == typeof(InputLayer));
+                    Debug.Assert(x[0]._keras_history.Value.Item1.GetType() == typeof(InputLayer));
                 }
 
 
@@ -284,7 +283,7 @@ namespace KerasSharp.Models
         {
             get
             {
-                if (this.model is null)
+                if (this.model == null)
                     this.build();
                 return this.model.uses_learning_phase;
             }
@@ -303,7 +302,7 @@ namespace KerasSharp.Models
                         var merge = this.layers[0] as Merge;
                         foreach (Layer layer in merge.layers)
                         {
-                            if (hasattr(layer, "_flattened_layers"))
+                            if (layer._flattened_layers != null)
                             {
                                 foreach (Layer sublayer in layer._flattened_layers)
                                 {
@@ -311,9 +310,11 @@ namespace KerasSharp.Models
                                         layers.Add(sublayer);
                                 }
                             }
-                            else if (hasattr(layer, "layers"))
+                            else
+                            //else if (hasattr(layer, "layers"))
                             {
-                                foreach (Layer sublayer in merge.layers)
+                                throw new NotImplementedException();
+                                /*foreach (Layer sublayer in merge.layers)
                                 {
                                     if (!layers.Contains(sublayer))
                                     {
@@ -324,7 +325,7 @@ namespace KerasSharp.Models
                                         if (!layers.Contains(layer))
                                             layers.Add(layer);
                                     }
-                                }
+                                }*/
                             }
                         }
                     }
@@ -349,10 +350,11 @@ namespace KerasSharp.Models
 
         public List<T> _gather_list_attr<T>(object attr)
         {
-            var all_attrs = new List<T>();
+            throw new NotImplementedException();
+            /*var all_attrs = new List<T>();
             foreach (Layer layer in this._flattened_layers)
                 all_attrs.Add(getattr<T>(layer, attr, new object[] { }));
-            return all_attrs;
+            return all_attrs;*/
         }
 
 
@@ -592,7 +594,7 @@ namespace KerasSharp.Models
                 validation_split,
                 validation_data?.Select(a => a.dict_from_single()).ToList(),
                 shuffle,
-                class_weight?.Select(p => (p.Key.ToString(), p.Value)).ToDictionary(a => a.Item1, b => b.Item2).dict_from_single(),
+                class_weight?.Select(p => ValueTuple.Create(p.Key.ToString(), p.Value)).ToDictionary(a => a.Item1, b => b.Item2).dict_from_single(),
                 sample_weight.dict_from_single(),
                 initial_epoch,
                 kwargs);

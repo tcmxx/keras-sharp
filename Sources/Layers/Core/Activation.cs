@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -26,18 +28,9 @@
 
 namespace KerasSharp
 {
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    
     using System.Runtime.Serialization;
     using KerasSharp.Engine.Topology;
-
-    using static KerasSharp.Backends.Current;
-    using System.Reflection;
-
 
     /// <summary>
     ///   Applies an activation function to an output.
@@ -62,12 +55,12 @@ namespace KerasSharp
             this.activation = activation;
         }
 
-        public Activation(string name)
+        /*public Activation(string name)
         {
             this.activation = Create(name);
-        }
+        }*/
 
-        public static IActivationFunction Create(string name)
+        /*public static IActivationFunction Create(string name)
         {
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/activations.py#L90
             Type type = typeof(IActivationFunction);
@@ -82,7 +75,7 @@ namespace KerasSharp
 
             var activationFunction = (IActivationFunction)Activator.CreateInstance(activationType);
             return activationFunction;
-        }
+        }*/
 
         protected override List<Tensor> InnerCall(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
         {

@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,21 +25,19 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 namespace KerasSharp.Engine.Topology
 {
     using Accord.Math;
-    using KerasSharp.Backends;
-    using KerasSharp.Layers;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
     using System.Threading.Tasks;
-    using static KerasSharp.Python;
+
     using System.Diagnostics;
     using Accord;
+    using KerasSharp.Backends;
 
     [DataContract]
     [DebuggerDisplay("{ToString()}")]
@@ -46,8 +46,8 @@ namespace KerasSharp.Engine.Topology
         public IBackend K;
         public int?[] _keras_shape;
         public bool _uses_learning_phase;
-        public int?[] int_shape;
-        public (Layer layer, int node_index, int tensor_index)? _keras_history
+        public int?[] int_shape { get { return shape; } }   //changed so that the shape is available for non Layer tensors. Might cause issue...
+        public ValueTuple<Layer, int, int>? _keras_history    //layer node_index, tensor_index
         {
             get;
             set;
@@ -89,7 +89,10 @@ namespace KerasSharp.Engine.Topology
             object r = eval();
             Array ar = r as Array;
             if (ar != null)
-                return ar.To<T>();
+            {
+                throw new NotImplementedException();    //temp
+                                                        //return ar.To<T>();
+            }
             return r.To<T>();
         }
 

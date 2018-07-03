@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,19 +26,16 @@
 //    SOFTWARE.
 //
 
+
 namespace KerasSharp.Initializers
 {
     using Accord.Math;
     using KerasSharp.Engine.Topology;
     using System;
-    using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Runtime.Serialization;
-    using System.Text;
-    using System.Threading.Tasks;
 
-    using static KerasSharp.Backends.Current;
+    using static Backends.Current;
 
 
     /// <summary>
@@ -117,7 +116,9 @@ namespace KerasSharp.Initializers
         {
             using (K.name_scope("variance_scaling"))
             {
-                var (fan_in, fan_out) = _compute_fans(shape);
+                var temp = _compute_fans(shape);
+                var fan_in = temp.Item1; var fan_out = temp.Item2;
+                //var (fan_in, fan_out) = _compute_fans(shape);
 
                 Double scale = this.scale;
                 if (this.mode == "fan_in")
@@ -149,8 +150,8 @@ namespace KerasSharp.Initializers
         /// <param name="data_format">The image data format to use for convolution kernels. Note that all kernels 
         ///   in Keras are standardized on the <c>channels_last</c> ordering(even when inputs are set to
         ///   <c>channels_first</c>).</param>
-        /// 
-        private (double fan_int, double fan_out) _compute_fans(int[] shape, string data_format = "channels_last")
+        /// output:fan_int, fan_out
+        private Tuple<double, double> _compute_fans(int[] shape, string data_format = "channels_last")
         {
             double fan_in, fan_out;
             if (shape.Length == 2)
@@ -187,7 +188,8 @@ namespace KerasSharp.Initializers
                 fan_out = Math.Sqrt(shape.Product());
             }
 
-            return (fan_in, fan_out);
+            return Tuple.Create(fan_in, fan_out);
         }
     }
+
 }

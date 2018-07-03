@@ -1,4 +1,32 @@
-﻿using Accord;
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
+// https://github.com/cesarsouza/keras-sharp
+//
+// Based under the Keras library for Python. See LICENSE text for more details.
+//
+//    The MIT License(MIT)
+//    
+//    Permission is hereby granted, free of charge, to any person obtaining a copy
+//    of this software and associated documentation files (the "Software"), to deal
+//    in the Software without restriction, including without limitation the rights
+//    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//    copies of the Software, and to permit persons to whom the Software is
+//    furnished to do so, subject to the following conditions:
+//    
+//    The above copyright notice and this permission notice shall be included in all
+//    copies or substantial portions of the Software.
+//    
+//    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//    SOFTWARE.
+//
+
+using Accord;
 using Accord.Math;
 using System;
 using System.Collections.Generic;
@@ -131,24 +159,24 @@ namespace Accord.Math
         }
 
 
-        //public static Array ExpandDimensions(this Array array, int axis)
-        //{
-        //    List<int> dimensions = array.GetLength().ToList();
-        //    dimensions.Insert(axis, 1);
-        //    Array res = Array.CreateInstance(array.GetInnerMostType(), dimensions.ToArray());
-        //    Buffer.BlockCopy(array, 0, res, 0, res.GetNumberOfBytes());
-        //    return res;
-        //}
+        public static Array ExpandDimensions(this Array array, int axis)
+        {
+            List<int> dimensions = array.GetLength().ToList();
+            dimensions.Insert(axis, 1);
+            Array res = Array.CreateInstance(array.GetInnerMostType(), dimensions.ToArray());
+            Buffer.BlockCopy(array, 0, res, 0, res.GetNumberOfBytes());
+            return res;
+        }
 
-        //public static Array Squeeze(this Array array)
-        //{
-        //    int[] dimensions = array.GetLength().Where(x => x != 1).ToArray();
-        //    if (dimensions.Length == 0)
-        //        dimensions = new[] { 1 };
-        //    Array res = Array.CreateInstance(array.GetInnerMostType(), dimensions);
-        //    Buffer.BlockCopy(array, 0, res, 0, res.GetNumberOfBytes());
-        //    return res;
-        //}
+        public static Array Squeeze(this Array array)
+        {
+            int[] dimensions = array.GetLength().Where(x => x != 1).ToList().ToArray();
+            if (dimensions.Length == 0)
+                dimensions = new[] { 1 };
+            Array res = Array.CreateInstance(array.GetInnerMostType(), dimensions);
+            Buffer.BlockCopy(array, 0, res, 0, res.GetNumberOfBytes());
+            return res;
+        }
 
         //public static Array Flatten(this Array array, MatrixOrder order = MatrixOrder.CRowMajor)
         //{
@@ -173,13 +201,13 @@ namespace Accord.Math
         //}
 
 
-        //public static int GetNumberOfBytes(this Array array)
-        //{
-        //    Type elementType = array.GetInnerMostType();
-        //    int elementSize = Marshal.SizeOf(elementType);
-        //    int numberOfElements = array.GetTotalLength();
-        //    return elementSize * numberOfElements;
-        //}
+        public static int GetNumberOfBytes(this Array array)
+        {
+            Type elementType = array.GetInnerMostType();
+            int elementSize = Marshal.SizeOf(elementType);
+            int numberOfElements = array.GetTotalLength();
+            return elementSize * numberOfElements;
+        }
 
         //public static double?[] ones(int length)
         //{

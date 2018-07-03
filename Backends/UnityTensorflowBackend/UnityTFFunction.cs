@@ -1,4 +1,8 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿
+//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,38 +28,33 @@
 //    SOFTWARE.
 //
 
+
 using System;
 using System.Collections.Generic;
-using KerasSharp.Engine.Topology;
-using KerasSharp.Models;
 using TensorFlow;
 using System.Linq;
 using Accord.Math;
 using Accord;
 using System.IO;
+using UnityEngine;
+using KerasSharp.Engine.Topology;
+using KerasSharp.Models;
 
 namespace KerasSharp.Backends
 {
-
-    /// <summary>
-    ///   Runs a computation graph.
-    /// </summary>
-    /// 
-    /// <seealso cref="KerasSharp.Models.Function" />
-    /// 
-    public class TFFunction : Function
+    public class UnityTFFunction : Function
     {
-        private TensorFlowBackend K;
-        private TFGraph tf;
+        private UnityTFBackend backend;
+        private TFGraph graph;
         private List<Tensor> inputs;
         private List<Tensor> outputs;
         private string name;
         private List<TFOperation> updates_op;
 
-        public TFFunction(TensorFlowBackend k, List<Tensor> inputs, List<Tensor> outputs, List<List<Tensor>> updates, string name)
+        public UnityTFFunction(UnityTFBackend k, List<Tensor> inputs, List<Tensor> outputs, List<List<Tensor>> updates, string name)
         {
-            this.K = k;
-            this.tf = k.tf;
+            this.backend = k;
+            this.graph = k.Graph;
 
             if (updates == null)
                 updates = new List<List<Tensor>>();
@@ -67,14 +66,14 @@ namespace KerasSharp.Backends
                 {
                     if (update.Count == 2)
                     {
-                        var p = K.In(update[0]);
-                        var new_p = K.In(update[1]);
-                        updates_ops.Add(tf.Assign(p, new_p).Operation);
+                        var p = backend.In(update[0]);
+                        var new_p = backend.In(update[1]);
+                        updates_ops.Add(graph.AssignVariableOp(p, new_p));
                     }
                     else if (update.Count == 1)
                     {
                         // assumed already an op
-                        updates_ops.Add(K.In(update[0]).output.Operation);
+                        updates_ops.Add(backend.In(update[0]).Output.Operation);
                     }
                     else
                     {
@@ -93,7 +92,7 @@ namespace KerasSharp.Backends
         public override List<Tensor> Call(List<Array> inputs)
         {
             var feed_dict = new Dictionary<Tensor, Array>();
-            foreach (var (tensor, value) in Enumerable.Zip(this.inputs, inputs, (a, b) => (a, b)))
+            foreach (var tuple in Enumerable.Zip(this.inputs, inputs, (a, b) => Tuple.Create(a, b)))
             {
                 // if (is_sparse(tensor))
                 // {
@@ -102,12 +101,12 @@ namespace KerasSharp.Backends
                 //                               np.expand_dims(sparse_coo.col, 1)), 1)
                 //     value = (indices, sparse_coo.data, sparse_coo.shape)
                 // }
-                feed_dict[tensor] = value;
+                feed_dict[tuple.Item1] = tuple.Item2;
             }
 
-            var session = K._SESSION;
+            var session = backend.Session;
 
-            var init = tf.GetGlobalVariablesInitializer();
+            var init = graph.GetGlobalVariablesInitializer();
             if (init.Length > 0)
             {
                 Console.WriteLine("Initializing variables:");
@@ -118,7 +117,7 @@ namespace KerasSharp.Backends
                 }
 
                 Console.WriteLine("Operations:");
-                foreach (var op in tf.GetEnumerator())
+                foreach (var op in graph.GetEnumerator())
                     Console.WriteLine(" - " + op.Name);
                 Console.WriteLine();
             }
@@ -130,21 +129,43 @@ namespace KerasSharp.Backends
             var runner = session.GetRunner();
 
             foreach (var o in this.outputs)
-                runner.Fetch(K.In(o).output);
+                runner.Fetch(backend.In(o).Output);
 
             foreach (var op in this.updates_op)
                 runner.AddTarget(op);
 
+
+            List<TFTensor> tensors = new List<TFTensor>();
             foreach (KeyValuePair<Tensor, Array> pair in feed_dict)
             {
-                TensorFlowTensor t = K.In(pair.Key);
-                runner.AddInput(t.output, pair.Value);
+                UnityTFTensor t = backend.In(pair.Key);
+
+                //get the shape based on the tensor and input data length
+                long[] actualShape = t.TF_Shape.Copy();
+                int totalLength = Mathf.Abs((int)actualShape.Aggregate((s, n) => n * s));
+
+                int indexOfBatch = actualShape.IndexOf(-1);
+                if (indexOfBatch >= 0)
+                    actualShape[indexOfBatch] = pair.Value.Length / totalLength;
+                Debug.Assert(totalLength <= pair.Value.Length, "Feed array does not have enough data");
+
+                //Debug.Log("totalLength:"+totalLength + "  Shape:" + string.Join(",", actualShape));
+
+                //TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
+                TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape));
+
+                tensors.Add(data);
+                runner.AddInput(t.Output, data);
             }
 
 
 
             var updated = runner.Run();
 
+            foreach (var d in tensors)
+            {
+                d.Dispose();
+            }
             //Console.WriteLine();
 
             //foreach (var v in updated)
@@ -164,7 +185,13 @@ namespace KerasSharp.Backends
             //Console.WriteLine("After:");
             //PrintVariables(feed_dict, session);
 
-            return updated.Get(0, this.outputs.Count).Select(t => K.Out(t)).ToList();
+            return updated.Get(0, this.outputs.Count).Select(t =>
+            {
+                var result = new UnityTFTensor(backend);
+                result.TensorValue = t.GetValue();
+                result.TensorType = t.TensorType;
+                return (Tensor)result;
+            }).ToList();
 
             // Console.ReadKey();
         }
@@ -206,8 +233,8 @@ namespace KerasSharp.Backends
                     var debugRunner = session.GetRunner();
                     foreach (KeyValuePair<Tensor, Array> pair in feed_dict)
                     {
-                        TensorFlowTensor t = K.In(pair.Key);
-                        debugRunner.AddInput(t.output, pair.Value);
+                        UnityTFTensor t = backend.In(pair.Key);
+                        debugRunner.AddInput(t.Output, pair.Value);
                     }
 
                     Console.WriteLine(op);
@@ -217,6 +244,10 @@ namespace KerasSharp.Backends
 
                     object obj = v[0].GetValue();
 
+                    foreach (var va in v)
+                    {
+                        va.Dispose();
+                    }
                     if (obj is float[,])
                         Console.WriteLine((obj as float[,]).ToCSharp());
                     else if (obj is float[])

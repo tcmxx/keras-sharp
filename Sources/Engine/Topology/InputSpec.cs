@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,18 +25,10 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 namespace KerasSharp
 {
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Runtime.Serialization;
-    using System.Text;
-    using System.Threading.Tasks;
-    
-
-    using static KerasSharp.Python;
 
     [DataContract]
     public class InputSpec
@@ -81,7 +75,7 @@ namespace KerasSharp
 
         public override string ToString()
         {
-            return $"dtype={dtype}, shape={str(shape)}, ndim={ndim}, max_ndim={max_ndim}, min_ndim={min_ndim}, axes={str(axes)}";
+            return $"dtype={dtype}, shape={UnityTFUtils.ToString(shape)}, ndim={ndim}, max_ndim={max_ndim}, min_ndim={min_ndim}, axes={UnityTFUtils.ToString(axes)}";
         }
     }
 }

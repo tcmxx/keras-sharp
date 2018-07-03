@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,20 +26,19 @@
 //    SOFTWARE.
 //
 
+
 namespace KerasSharp.Optimizers
 {
     using Accord.Math;
-    using Accord.Math.Optimization.Losses;
     using KerasSharp.Constraints;
     using KerasSharp.Engine.Topology;
     using KerasSharp.Losses;
-    using KerasSharp.Models;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.Serialization;
 
-    using static KerasSharp.Backends.Current;
+    using static Backends.Current;
 
 
     /// <summary>
@@ -47,7 +48,7 @@ namespace KerasSharp.Optimizers
     /// <seealso cref="KerasSharp.Models.IOptimizer" />
     /// 
     [DataContract]
-    public abstract class OptimizerBase 
+    public abstract class OptimizerBase
     {
         protected List<List<Tensor>> updates;
         protected List<Tensor> weights;
@@ -103,7 +104,7 @@ namespace KerasSharp.Optimizers
         public void set_weights(List<Array> weights)
         {
             var param = this.weights;
-            var weight_value_tuples = new List<(Tensor, Array)>();
+            var weight_value_tuples = new List<ValueTuple<Tensor, Array>>();
             var param_values = K.batch_get_value(param);
 
             for (int i = 0; i < param_values.Count; i++)
@@ -112,7 +113,7 @@ namespace KerasSharp.Optimizers
                 Tensor p = param[i];
                 Array w = weights[i];
 
-                if (pv.GetLength().IsEqual(w.GetLength()))
+                if (pv.GetLength().IsEqual(w.GetLength()) && !(pv.Rank == 1 && pv.Length == w.Length))
                     throw new Exception($"Optimizer weight shape {pv.GetLength()} not compatible with provided weight shape {w.GetLength()}.");
 
                 weight_value_tuples.Add(ValueTuple.Create(p, w));

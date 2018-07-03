@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -26,18 +28,8 @@
 
 namespace KerasSharp.Initializers
 {
-    using Accord.Math;
     using KerasSharp.Engine.Topology;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Runtime.Serialization;
-    using System.Text;
-    using System.Threading.Tasks;
-
-    using static KerasSharp.Backends.Current;
-
 
     /// <summary>
     ///   Glorot uniform initializer, also called Xavier uniform initializer.
@@ -52,16 +44,17 @@ namespace KerasSharp.Initializers
     public class GlorotUniform : IWeightInitializer
     {
         private int? seed;
-
+        private float scale;
         /// <summary>
         /// Initializes a new instance of the <see cref="GlorotUniform"/> class.
         /// </summary>
         /// 
         /// <param name="seed">The integer used to seed the random generator.</param>
         /// 
-        public GlorotUniform(int? seed = null)
+        public GlorotUniform(int? seed = null, float scale = 1)
         {
             this.seed = seed;
+            this.scale = scale;
         }
 
         /// <summary>
@@ -76,7 +69,8 @@ namespace KerasSharp.Initializers
         /// 
         public Tensor Call(int[] shape, DataType? dtype = null)
         {
-            return new VarianceScaling(scale: 1.0, mode: "fan_avg", distribution: "uniform", seed: seed).Call(shape, dtype);
+            return new VarianceScaling(scale: this.scale, mode: "fan_avg", distribution: "uniform", seed: seed).Call(shape, dtype);
         }
     }
+
 }

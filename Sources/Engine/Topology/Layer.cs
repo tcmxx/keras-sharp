@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,25 +25,19 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
+using KerasSharp.Backends;
 
 namespace KerasSharp.Engine.Topology
 {
     using System;
     using Accord.Math;
-    using KerasSharp.Constraints;
-    using KerasSharp.Initializers;
-    using KerasSharp.Regularizers;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    
 
-    using static KerasSharp.Backends.Current;
-    using static KerasSharp.Python;
-
-
+    using static Current;
+    using KerasSharp.Constraints;
+    using KerasSharp.Regularizers;
+    using KerasSharp.Initializers;
 
     /// <summary>
     /// Abstract base layer class.
@@ -202,9 +198,9 @@ namespace KerasSharp.Engine.Topology
             var insecurePattern = "([a-z])([A-Z])";
             var insecure = System.Text.RegularExpressions.Regex.Replace(intermediate, insecurePattern, "$1_$2").ToLower();
             /*
-			 In Python, a class starting with "_" is insecure for creating scopes. 
-			 While this is not a concern in C#, it's implemented here for compatibility with Keras naming.
-			*/
+             In Python, a class starting with "_" is insecure for creating scopes. 
+             While this is not a concern in C#, it's implemented here for compatibility with Keras naming.
+            */
             if (insecure.StartsWith("_", StringComparison.InvariantCulture))
             {
                 return "private" + insecure;
@@ -482,7 +478,7 @@ namespace KerasSharp.Engine.Topology
                 this.assert_input_compatibility(inputs);
 
                 // Handle mask propagation.
-                List<Tensor> previous_mask = Container._collect_previous_mask(inputs);
+                List<Tensor> previous_mask = _collect_previous_mask(inputs);
                 //var user_kwargs = copy.copy(kwargs);
 
                 List<Tensor> nextMask = null;
@@ -498,7 +494,7 @@ namespace KerasSharp.Engine.Topology
                 }
 
                 // Handle automatic shape inference (only useful for Theano).
-                List<int?[]> input_shape = Container._collect_input_shape(inputs);
+                List<int?[]> input_shape = _collect_input_shape(inputs);
 
                 // Actually call the layer, collecting output(s), mask(s), and shape(s).
                 List<Tensor> output = this.InnerCall(inputs, nextMask, training);
@@ -609,10 +605,11 @@ namespace KerasSharp.Engine.Topology
             {
                 if (x._keras_history != null)
                 {
-                    var (inbound_layer, node_index, tensor_index) = x._keras_history.Value;
-                    inbound_layers.Add(inbound_layer);
-                    node_indices.Add(node_index);
-                    tensor_indices.Add(tensor_index);
+                    var history = x._keras_history.Value;
+                    //var (inbound_layer, node_index, tensor_index) = x._keras_history.Value;
+                    inbound_layers.Add(history.Item1);
+                    node_indices.Add(history.Item2);
+                    tensor_indices.Add(history.Item3);
                 }
                 else
                 {
@@ -641,7 +638,7 @@ namespace KerasSharp.Engine.Topology
                 bool uses_lp = input_tensors.Any(x => x._uses_learning_phase);
                 uses_lp = this.uses_learning_phase || uses_lp;
                 output_tensors[i]._uses_learning_phase = output_tensors[i]._uses_learning_phase || uses_lp;
-                output_tensors[i]._keras_history = (this, this.inbound_nodes.Count - 1, i);
+                output_tensors[i]._keras_history = ValueTuple.Create(this, this.inbound_nodes.Count - 1, i);
             }
         }
 
@@ -944,7 +941,7 @@ namespace KerasSharp.Engine.Topology
                 if (this.inbound_nodes.Count == 0)
                     throw new Exception("The layer has never been called and thus has no defined input shape.");
 
-                var all_input_shapes = new HashSet<string>(this.inbound_nodes.Select(n => str(n.input_shapes)));
+                var all_input_shapes = new HashSet<string>(this.inbound_nodes.Select(n => UnityTFUtils.ToString(n.input_shapes)));
                 if (all_input_shapes.Count == 1)
                     return this.inbound_nodes[0].input_shapes;
 
@@ -973,7 +970,7 @@ namespace KerasSharp.Engine.Topology
                 if (this.inbound_nodes.Count == 0)
                     throw new Exception("The layer has never been called and thus has no defined output shape.");
 
-                var all_output_shapes = new HashSet<string>(this.inbound_nodes.Select(n => str(n.output_shapes)));
+                var all_output_shapes = new HashSet<string>(this.inbound_nodes.Select(n => UnityTFUtils.ToString(n.output_shapes)));
                 if (all_output_shapes.Count == 1)
                     return this.inbound_nodes[0].output_shapes;
 
@@ -1073,7 +1070,7 @@ namespace KerasSharp.Engine.Topology
         private string _object_list_uid(List<Tensor> inputs)
         {
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/topology.py#L2706
-            return String.Join(", ", inputs.Select(x => str(id(x))));
+            return String.Join(", ", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
         }
 
         public virtual List<List<Tensor>> get_updates_for(List<Tensor> inputs)
@@ -1129,7 +1126,7 @@ namespace KerasSharp.Engine.Topology
             if (this.weights.Count == 0)
                 return;
 
-            var weight_value_tuples = new List<Tuple<Tensor, Array>>();
+            var weight_value_tuples = new List<ValueTuple<Tensor, Array>>();
 
             List<Array> param_values = K.batch_get_value(this.weights);
 
@@ -1140,16 +1137,72 @@ namespace KerasSharp.Engine.Topology
                 Array w = value[i];
                 if (pv.GetLength().IsEqual(w.GetLength()))
                     throw new Exception($"Layer weight shape {pv.GetLength()} not compatible with provided weight shape {w.GetLength()}");
-                weight_value_tuples.Add(Tuple.Create(p, w));
+                weight_value_tuples.Add(ValueTuple.Create(p, w));
             }
 
             K.batch_set_value(weight_value_tuples);
         }
 
+        /// <summary>
+        ///   Retrieves the output mask(s) of the previous node.
+        /// </summary>
+        ///
+        /// <param name="input_tensors">A tensor or list of tensors.</param>
+        ///
+        /// <returns>A mask tensor or list of mask tensors.</returns>
+        ///
+        private static List<Tensor> _collect_previous_mask(List<Tensor> input_tensors)
+        {
+            var masks = new List<Tensor>();
+
+            foreach (Tensor x in input_tensors)
+            {
+                if (x._keras_history.HasValue)
+                {
+                    var history = x._keras_history.Value;
+                    //var (inbound_layer, node_index, tensor_index) = x.KerasHistory.Value;
+                    var node = history.Item1.inbound_nodes[history.Item2];
+                    var mask = node.output_masks[history.Item3];
+                    masks.Add(mask);
+                }
+                else
+                {
+                    masks.Add(null);
+                }
+            }
+            return masks;
+        }
+        /// <summary>
+        ///   Collects the output shape(s) of a list of Keras tensors.
+        /// </summary>
+        /// 
+        /// <param name="input_tensors">List of input tensors(or single input tensor).</param>
+        /// 
+        /// <returns>List of shape tuples(or single tuple), one tuple per input.</returns>
+        /// 
+        private static List<int?[]> _collect_input_shape(List<Tensor> input_tensors)
+        {
+            var shapes = new List<int?[]>();
+
+            foreach (Tensor x in input_tensors)
+            {
+                try
+                {
+                    shapes.Add(K.int_shape(x));
+                }
+                catch
+                {
+                    shapes.Add(null);
+                }
+            }
+            return shapes;
+        }
         public override string ToString()
         {
-            return $"{this.name} ({str(this.input_shape)} -> {str(this.output_shape)})";
+            return $"{this.name} ({UnityTFUtils.ToString(this.input_shape)} -> {UnityTFUtils.ToString(this.output_shape)})";
         }
     }
 }
+
+
 

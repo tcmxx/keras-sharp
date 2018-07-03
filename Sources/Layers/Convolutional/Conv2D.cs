@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,23 +25,18 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 namespace KerasSharp
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-
     using System.Runtime.Serialization;
-    using KerasSharp.Constraints;
-    using KerasSharp.Regularizers;
-    using KerasSharp.Initializers;
     using Accord.Math;
+    using KerasSharp.Constraints;
     using KerasSharp.Engine.Topology;
-
-    using static KerasSharp.Backends.Current;
+    using KerasSharp.Initializers;
+    using KerasSharp.Regularizers;
+    using static Backends.Current;
 
     /// <summary>
     ///   Abstract nD convolution layer (private, used as implementation base).
@@ -175,7 +172,7 @@ namespace KerasSharp
                 throw new Exception("The channel dimension of the inputs should be defined. Found `None`.");
 
             int input_dim = input_shape.Get(channel_axis).Value;
-            int[] kernel_shape = this.kernel_size.Concat(new[] { input_dim, this.filters }).ToArray();
+            int[] kernel_shape = this.kernel_size.Concat(new[] { input_dim, this.filters }).ToList().ToArray();
 
             this.kernel = this.add_weight(shape: kernel_shape,
                                       initializer: this.kernel_initializer,
@@ -269,7 +266,7 @@ namespace KerasSharp
                 var new_space = new List<int?>();
                 for (int i = 0; i < space.Length; i++)
                 {
-                    int? new_dim = conv_utils.conv_output_length(
+                    int? new_dim = ConvUtils.ConvOutputLength(
                         space[i],
                         this.kernel_size[i],
                         padding: this.padding,
@@ -278,7 +275,7 @@ namespace KerasSharp
                     new_space.Add(new_dim);
                 }
 
-                return new[] { new[] { input_shape[0] }.Concat(new_space).Concat(new int?[] { this.filters }).ToArray() }.ToList();
+                return new[] { new[] { input_shape[0] }.Concat(new_space).Concat(new int?[] { this.filters }).ToList().ToArray() }.ToList();
             }
             else if (this.data_format == DataFormatType.ChannelsFirst)
             {
@@ -286,7 +283,7 @@ namespace KerasSharp
                 var new_space = new List<int?>();
                 for (int i = 0; i < space.Length; i++)
                 {
-                    int? new_dim = conv_utils.conv_output_length(
+                    int? new_dim = ConvUtils.ConvOutputLength(
                         space[i],
                         this.kernel_size[i],
                         padding: this.padding,
@@ -295,7 +292,7 @@ namespace KerasSharp
                     new_space.Add(new_dim);
                 }
 
-                return new[] { new[] { input_shape[0] }.Concat(new int?[] { this.filters }).Concat(new_space).ToArray() }.ToList();
+                return new[] { new[] { input_shape[0] }.Concat(new int?[] { this.filters }).Concat(new_space).ToList().ToArray() }.ToList();
             }
             else
             {
@@ -390,7 +387,7 @@ namespace KerasSharp
             this.input_spec = new List<InputSpec> { new InputSpec(ndim: 4) };
         }
 
-        public Conv2D(int filters,
+        /*public Conv2D(int filters,
          int[] kernel_size = null,
          int[] strides = null,
          PaddingType padding = PaddingType.Valid,
@@ -423,7 +420,7 @@ namespace KerasSharp
         bias_constraint: bias_constraint,
         input_shape: input_shape)
         {
-        }
+        }*/
 
     }
 }

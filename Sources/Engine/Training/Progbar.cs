@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -28,7 +30,7 @@ using Accord;
 using Accord.Math;
 using System;
 using System.Collections.Generic;
-
+using UnityEngine;
 namespace KerasSharp.Models
 {
     internal class Progbar
@@ -62,15 +64,18 @@ namespace KerasSharp.Models
             this.verbose = verbose;
         }
 
-        public void update(int current, List<(string, object)> values = null, bool force = false)
+        public void update(int current, List<ValueTuple<string, object>> values = null, bool force = false)
         {
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/utils/generic_utils.py#L241
 
             if (values == null)
-                values = new List<(string, object)>();
+                values = new List<ValueTuple<string, object>>();
 
-            foreach (var (k, v) in values)
+            foreach (var value in values)
             {
+                var k = value.Item1;
+                var v = value.Item2;
+                //(k, v)
                 if (!this.sum_values.ContainsKey(k))
                 {
                     this.sum_values[k] = new List<double>() { v.To<double>() * (current - this.seen_so_far), current - this.seen_so_far };
@@ -141,6 +146,7 @@ namespace KerasSharp.Models
 
             Console.Write(info);
             Console.Out.Flush();
+            Debug.Log(info);
 
             if (current >= this.target)
                 Console.Write("\n");
@@ -155,6 +161,7 @@ namespace KerasSharp.Models
                         info += $" - {k}s:";
                         double avg = this.sum_values[k][0] / (double)Math.Max(1, this.sum_values[k][1]);
                         Console.Write(info + "\n");
+                        Debug.Log(info);
                     }
                 }
             }

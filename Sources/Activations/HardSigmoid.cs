@@ -1,4 +1,9 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿
+
+//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -26,19 +31,15 @@
 
 namespace KerasSharp.Activations
 {
-    using static KerasSharp.Backends.Current;
 
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    
+    using static Backends.Current;
+
     using System.Runtime.Serialization;
     using KerasSharp.Engine.Topology;
 
     /// <summary>
-    ///   Hard sigmoid activation function.
+    /// <summary>
+    ///   Scaled Exponential Linear Unit (SeLU) activation function.
     /// </summary>
     /// 
     /// <seealso cref="KerasSharp.IActivationFunction" />
@@ -46,12 +47,9 @@ namespace KerasSharp.Activations
     [DataContract]
     public class HardSigmoid : ActivationFunctionBase, IActivationFunction
     {
-        /// <summary>
-        /// Wires the activation function to the graph.
-        /// </summary>
-        /// <param name="x">The input tensor.</param>
-        /// <returns>The output tensor with the activation function applied.</returns>
-        public override Tensor Call(Tensor x, Tensor mask)
+
+
+        public override Tensor Call(Tensor x, Tensor mask = null)
         {
             return K.hard_sigmoid(x);
         }

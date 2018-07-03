@@ -1,4 +1,8 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿
+//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -23,40 +27,24 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
-namespace KerasSharp.Losses
+namespace KerasSharp.Backends
 {
     using KerasSharp.Engine.Topology;
-    using System;
-    using System.Runtime.Serialization;
-    
+    using UnityEngine;
 
-    using static KerasSharp.Backends.Current;
-
-    [DataContract]
-    public class CategoricalHinge : ILoss
+    public static class BackendExt
     {
 
-        /// <summary>
-        ///   Wires the given ground-truth and predictions through the desired loss.
-        /// </summary>
-        /// 
-        /// <param name="expected">The ground-truth data that the model was supposed to approximate.</param>
-        /// <param name="actual">The actual data predicted by the model.</param>
-        /// 
-        /// <returns>A scalar value representing how far the model's predictions were from the ground-truth.</returns>
-        /// 
-        public Tensor Call(Tensor expected, Tensor actual, Tensor sample_weight = null, Tensor mask = null)
+        public static Tensor normal_probability(this IBackend b, Tensor input, Tensor mean, Tensor variance)
         {
-            if (sample_weight != null || mask != null)
-                throw new NotImplementedException();
+            //probability
+            var diff = input - mean;
+            var temp1 = diff * diff;
+            temp1 = temp1 / (2 * variance);
+            temp1 = b.exp(0 - temp1);
 
-            using (K.name_scope("categorical_hinge"))
-            {
-                Tensor pos = K.sum(K.mul(expected, actual), axis: -1);
-                Tensor neg = K.max(K.mul(K.subtract(1.0, expected), actual), axis: -1);
-                return K.maximum(0.0, K.add(K.subtract(neg, pos), 1.0));
-            }
+            var temp2 = 1.0f / b.square((2 * Mathf.PI) * variance);
+            return temp1 * temp2;
         }
     }
 }

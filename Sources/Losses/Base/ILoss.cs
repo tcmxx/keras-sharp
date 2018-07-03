@@ -1,4 +1,6 @@
-﻿// Keras-Sharp: C# port of the Keras library
+﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+//
+// Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
 //
 // Based under the Keras library for Python. See LICENSE text for more details.
@@ -24,11 +26,10 @@
 //    SOFTWARE.
 //
 
+using KerasSharp.Engine.Topology;
+
 namespace KerasSharp.Losses
 {
-    using KerasSharp.Engine.Topology;
-    
-
     /// <summary>
     ///   Common interface for loss functions.
     /// </summary>
@@ -46,11 +47,4 @@ namespace KerasSharp.Losses
         /// 
         Tensor Call(Tensor expected, Tensor actual, Tensor sample_weight = null, Tensor mask = null);
     }
-
-    // Aliases
-    public sealed class MSE : MeanSquareError { }
-    public sealed class MAE : MeanAbsoluteError { }
-    public sealed class MAPE : MeanAbsolutePercentageError { }
-    public sealed class MSLE : MeanSquareLogarithmicError { }
-    public sealed class Cosine : CosineProximity { }
 }
