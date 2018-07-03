@@ -1,3 +1,7 @@
+
+## Notes:
+This is heavily modified version of KerasSharp repo, for use of Unity with TensorflowSharp
+
 # Keras Sharp
 
 [![Join the chat at https://gitter.im/keras-sharp/Lobby](https://badges.gitter.im/keras-sharp/Lobby.svg)](https://gitter.im/keras-sharp/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
