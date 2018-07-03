@@ -1,6 +1,6 @@
 
 ## Notes:
-This is heavily modified version of KerasSharp repo, for use of Unity with TensorflowSharp
+Not workin yet, the working version will be updated soon. This is heavily modified version of KerasSharp repo, for use of Unity with TensorflowSharp. A lot of stuff is removed/added for Unity.
 
 # Keras Sharp
 
