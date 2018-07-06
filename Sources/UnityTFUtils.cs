@@ -211,11 +211,17 @@ public static class UnityTFUtils
         }
     }
 
+    /// <summary>
+    /// create a scalar TFTensor.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="value"> Can be a float, double or int, or Array of float, int or int with 1 element</param>
+    /// <returns></returns>
     public static TFTensor TFTensorFromT<T>(T value)
     {
         if (typeof(T) == typeof(float))
         {
-           return new TFTensor((float)Convert.ChangeType(value, typeof(float)));
+            return new TFTensor((float)Convert.ChangeType(value, typeof(float)));
         }
         else if (typeof(T) == typeof(double))
         {
@@ -224,12 +230,30 @@ public static class UnityTFUtils
         else if (typeof(T) == typeof(int))
         {
             return new TFTensor((int)Convert.ChangeType(value, typeof(int)));
-        }
-        else
+        } else if (value is Array)
         {
-            Debug.LogError("Does not Support Constant of type" + typeof(T).Name);
-            return null;
+            Array valueArray = (value as Array);
+            Debug.Assert(valueArray.Length == 1, "Input Array can only have 1 element");
+            if (valueArray.Length == 1) {
+                Type elementType = valueArray.GetInnerMostType();
+                if (elementType == typeof(float))
+                {
+                    return new TFTensor((float)(valueArray.GetValue(0)));
+                }
+                else if (elementType == typeof(double))
+                {
+                    return new TFTensor((double)(valueArray.GetValue(0)));
+                }
+                else if (elementType == typeof(int))
+                {
+                    return new TFTensor((int)(valueArray.GetValue(0)));
+                }
+            }
         }
+        
+        Debug.LogError("Does not Support Constant of type" + typeof(T).Name);
+        return null;
+        
     }
 
     public static TValue TryGetOr<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue def)

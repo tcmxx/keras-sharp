@@ -67,11 +67,19 @@ namespace KerasSharp.Backends
             try
             {
                 Graph = new TFGraph();
+
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Exception in UnityTFBackend() when creating a Graph:" + e.Message);
+            }
+            try
+            {
                 Session = new TFSession(Graph);
             }
             catch (Exception e)
             {
-                Debug.LogError("Exception in UnityTFBackend():" + e.Message);
+                Debug.LogError("Exception in UnityTFBackend() when creating a Session:" + e.Message);
             }
         }
 
@@ -214,7 +222,14 @@ namespace KerasSharp.Backends
             else
             {
                 assignPlaceholder = Graph.Placeholder(valueTensor.TensorType, shape);
+                //Graph.assi
+                //#if (UNITY_ANDROID || UNITY_IOS)
+                //TODO change back when TensorfhowSharp has updated mobile lib
+                // assignOperation = Graph.AssignVariableOp(x.Output,assignPlaceholder);
+                //#else
                 assignOperation = Graph.Assign(x.Output, assignPlaceholder).Operation;//  x.assign(assign_placeholder)
+                                                                                      //#endif
+
                 x.AssignPlaceHolder = assignPlaceholder;
                 x.AssignOperation = assignOperation;
             }
@@ -250,6 +265,13 @@ namespace KerasSharp.Backends
                 else
                 {
                     assignPlaceholder = Graph.Placeholder(valueTensor.TensorType, shape);
+                    //#if (UNITY_ANDROID || UNITY_IOS)
+                    //TODO change back when TensorfhowSharp has updated mobile lib
+                    //assignOperation = Graph.AssignVariableOp(i1.Output, assignPlaceholder);
+                    //#else
+                    assignOperation = Graph.Assign(i1.Output, assignPlaceholder).Operation;//  x.assign(assign_placeholder)
+                                                                                           //#endif
+
                     assignOperation = Graph.Assign(i1.Output, assignPlaceholder).Operation;//  x.assign(assign_placeholder)
                     i1.AssignPlaceHolder = assignPlaceholder;
                     i1.AssignOperation = assignOperation;
@@ -297,8 +319,11 @@ namespace KerasSharp.Backends
                 _output = Graph.Minimum(_output, Graph.Sub(_constant(1, dtype: dtype), _epsilon));
                 _output = Graph.Log(Graph.Div(_output, Graph.Sub(_constant(1, dtype: dtype), _output)));
             }
-
+#if UNITY_ANDROID || UNITY_IOS
+            throw new NotImplementedException();
+#else
             return Out(Graph.SigmoidCrossEntropyWithLogits(labels: _target, logits: _output));
+#endif
         }
 
         public Tensor cast(Tensor x, DataType dataType)
@@ -377,9 +402,20 @@ namespace KerasSharp.Backends
                 alloutputs[i] = In(tensors[i]);
             }
             return Out(Graph.Concat(_constant(axis), alloutputs));
-
+            
             //return batch_flatten(Out(Graph.Stack(alloutputs, axis,operName:"stackblabal")));
         }
+
+        public Tensor stack(List<Tensor> tensors, int? axis)
+        {
+            TFOutput[] alloutputs = new TFOutput[tensors.Count];
+            for (int i = 0; i < tensors.Count; ++i)
+            {
+                alloutputs[i] = In(tensors[i]);
+            }
+            return Out(Graph.Pack(alloutputs,axis));
+        }
+
         public Tensor one_hot(Tensor x, Tensor depth, Tensor on, Tensor off)
         {
             return Out(Graph.OneHot(In(x).Output, In(depth).Output, In(on).Output, In(off).Output));
@@ -519,8 +555,12 @@ namespace KerasSharp.Backends
 
         public Tensor dropout(Tensor x, double keep_prob, int[] noise_shape, int? seed)
         {
+            //return Out(Graph.Dropout(In(x), _constant(keep_prob), new TFShape(noise_shape.Apply(p => (long)p)), seed));
+#if (UNITY_ANDROID || UNITY_IOS)
+            throw new NotImplementedException();
+#else
             return Out(Graph.Dropout(In(x), _constant(keep_prob), new TFShape(noise_shape.Apply(p => (long)p)), seed));
-            //throw new NotImplementedException();
+#endif
         }
 
         public DataType? dtype(Tensor tensor) => Out(In(tensor).DType);
@@ -821,7 +861,7 @@ namespace KerasSharp.Backends
                     _constant(new int[] { intShape.Length-1 }, shape: new long[] { 1 })),
                 reduction_indices: _constant(new int[] { 0 }, shape: new long[] { 1 }));*/
             //TFOutput dim = Graph.Prod(Graph.Slice(shape, Graph.Const(1), Graph.Rank(shape)), reduction_indices: Graph.ReduceDims(shape, null));
-            var output = Out(Graph.Reshape(In(x), Graph.Stack(new TFOutput[] { Graph.Const(-1), Graph.Const(length) })));
+            var output = Out(Graph.Reshape(In(x), Graph.Pack(new TFOutput[] { Graph.Const(-1), Graph.Const(length) })));
             return output;
         }
 
@@ -1252,7 +1292,6 @@ namespace KerasSharp.Backends
 
             var init = _constant(array, _dtype, operName: $"{(name != null ? name : "Variable" + UnityTFUtils.GetId(t.Output).ToString())}/init");
             init = Graph.Print(init, new[] { init }, $"initializing {varName}");
-            //Graph.AddInitVariable(Graph.AssignVariableOp(t.Output, init, operName: $"{varName}/assign"));
             Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
 
             t._keras_shape = array.GetLength().Apply(x => (int?)x);
@@ -1304,7 +1343,6 @@ namespace KerasSharp.Backends
 
 
             init = Graph.Print(init, new[] { init }, $"initializing {varName}");
-            //Graph.AddInitVariable(Graph.AssignVariableOp(t.Output, init, operName: $"{varName}/assign"));
             Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
             t._keras_shape = tensor.shape;
             t._uses_learning_phase = false;

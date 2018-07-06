@@ -141,19 +141,27 @@ namespace KerasSharp.Backends
                 UnityTFTensor t = backend.In(pair.Key);
 
                 //get the shape based on the tensor and input data length
-                long[] actualShape = t.TF_Shape.Copy();
-                int totalLength = Mathf.Abs((int)actualShape.Aggregate((s, n) => n * s));
+                TFTensor data = null;
+                if (t.TF_Shape == null || t.TF_Shape.Length == 0)
+                {
+                    Debug.Assert(pair.Value.Length == 1, "Input tensor is a  scalar but feed data has more than 1 data");
+                    data = UnityTFUtils.TFTensorFromT(pair.Value);
+                }
+                else
+                {
+                    long[] actualShape = t.TF_Shape.Copy();
+                    int totalLength = Mathf.Abs((int)actualShape.Aggregate((s, n) => n * s));
 
-                int indexOfBatch = actualShape.IndexOf(-1);
-                if (indexOfBatch >= 0)
-                    actualShape[indexOfBatch] = pair.Value.Length / totalLength;
-                Debug.Assert(totalLength <= pair.Value.Length, "Feed array does not have enough data");
+                    int indexOfBatch = actualShape.IndexOf(-1);
+                    if (indexOfBatch >= 0)
+                        actualShape[indexOfBatch] = pair.Value.Length / totalLength;
+                    Debug.Assert(totalLength <= pair.Value.Length, "Feed array does not have enough data");
 
-                //Debug.Log("totalLength:"+totalLength + "  Shape:" + string.Join(",", actualShape));
+                    //Debug.Log("totalLength:"+totalLength + "  Shape:" + string.Join(",", actualShape));
 
-                //TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
-                TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape));
-
+                    //TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
+                    data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape));
+                }
                 tensors.Add(data);
                 runner.AddInput(t.Output, data);
             }

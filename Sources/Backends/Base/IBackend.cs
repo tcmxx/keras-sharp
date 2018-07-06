@@ -72,6 +72,7 @@ namespace KerasSharp.Backends
 
         Tensor concat(List<Tensor> tensors, int axis);
 
+        Tensor stack(List<Tensor> tensors, int? axis);
 
         Tensor dropout(Tensor p, double keep_prob, int[] noise_shape, int? seed);
 
