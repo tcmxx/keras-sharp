@@ -319,11 +319,8 @@ namespace KerasSharp.Backends
                 _output = Graph.Minimum(_output, Graph.Sub(_constant(1, dtype: dtype), _epsilon));
                 _output = Graph.Log(Graph.Div(_output, Graph.Sub(_constant(1, dtype: dtype), _output)));
             }
-#if UNITY_ANDROID || UNITY_IOS
-            throw new NotImplementedException();
-#else
+
             return Out(Graph.SigmoidCrossEntropyWithLogits(labels: _target, logits: _output));
-#endif
         }
 
         public Tensor cast(Tensor x, DataType dataType)
@@ -494,7 +491,7 @@ namespace KerasSharp.Backends
             }
             else
             {
-                long length = shape.Aggregate((a, b) => (a * b));
+                //long length = shape.Aggregate((a, b) => (a * b));
                 var dataArray = value as Array;
                 Debug.Assert(dataArray != null, "Only support array input when shape is specified");
                 t = UnityTFUtils.TFTensorFromArray(dataArray, new TFShape(shape));
