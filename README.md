@@ -1,11 +1,23 @@
 
 # Notes:
 Still work in progress. This is heavily modified version of KerasSharp repo, for use of Unity with TensorflowSharp. A lot of stuff is removed/added for Unity.
-Usage:
+
+It is made for Aalto University's Computational Intelligence in Games course and this repo: https://github.com/tcmxx/UnityTensorflowKeras.
+
+## Installation:
 1. Copy the whole repo to Assets folder of Unity project.
 2. Import the TensorflowSharp asset: 
 https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Using-TensorFlow-Sharp-in-Unity.md
+Note that the TensorflowSharp plugins provided by Unity is not updated yet, therefore Android build is not supported and there are some bugs with Conv2D. 
 
+## Plaforms:
+Mac and Windows are fully supported. Android does not support training. IOS is not tested.
+
+## Instruction:
+Not available yet.
+
+
+# Below is the readme from the original KerasSharp Repo:
 # Keras Sharp
 
 [![Join the chat at https://gitter.im/keras-sharp/Lobby](https://badges.gitter.im/keras-sharp/Lobby.svg)](https://gitter.im/keras-sharp/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
