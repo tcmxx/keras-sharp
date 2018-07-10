@@ -1356,6 +1356,20 @@ namespace KerasSharp.Backends
             return Out(Graph.Transpose(In(tensor).Output, _constant(perm)));
         }
 
+        public void try_initialize_variables()
+        {
+            try
+            {
+                // Initialize variables if necessary
+                TFOperation[] ops = Graph.GetGlobalVariablesInitializer();
+                if (ops.Length > 0)
+                    Session.Run(new TFOutput[] { }, new TFTensor[] { }, new TFOutput[] { }, ops);
+            }
+            catch
+            {
+                // temporary workaround until changes are sent to TensorFlowSharp
+            }
+        }
 
         public object eval(Tensor tensor)
         {

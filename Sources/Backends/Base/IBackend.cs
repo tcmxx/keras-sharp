@@ -238,6 +238,8 @@ namespace KerasSharp.Backends
 
         Tensor update(Tensor x, Tensor new_x, string name = null);
 
+        void try_initialize_variables();
+
         Tensor truncated_normal(int[] shape, double v, double stddev, DataType? dtype, int? seed);
 
         Tensor truncated_normal(int?[] shape, double v, double stddev, DataType? dtype, int? seed);
