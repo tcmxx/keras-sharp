@@ -81,6 +81,15 @@ namespace KerasSharp.Backends
             {
                 Debug.LogError("Exception in UnityTFBackend() when creating a Session:" + e.Message);
             }
+#if UNITY_ANDROID
+// This needs to ba called only once and will raise an exception if not
+        try{
+            TensorFlowSharp.Android.NativeBinding.Init();
+        }
+        catch{
+            //Debug.LogError("Android native binding can not initilaize:" + e.Message);
+        }
+#endif
         }
 
         /// <summary>
