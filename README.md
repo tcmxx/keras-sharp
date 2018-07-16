@@ -6,12 +6,18 @@ It is made for Aalto University's Computational Intelligence in Games course and
 
 ## Installation:
 1. Copy the whole repo to Assets folder of Unity project.
-2. Import the TensorflowSharp asset: 
-https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Using-TensorFlow-Sharp-in-Unity.md
-Note that the TensorflowSharp plugins provided by Unity is not updated yet, therefore Android build is not supported and there are some bugs with Conv2D. 
+2. Import the TensorflowSharp plugin assets:
+    -   from Unity ML's repo: https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Using-TensorFlow-Sharp-in-Unity.md
+    -   or, the one from me: https://1drv.ms/f/s!AoCjn1GKLxkNtNYuC2XaKoXX1aJbxQ
+    
+Note that the TensorflowSharp plugins provided by Unity is not updated yet. It's Android build is not supported,there are some bugs in Conv2D gradient, and it does not support Gradient for Concat operation. The one I provided fixed those problems for Windows platform, but not others(I don't have Mac or Linux machines)
+
+The one provided by me has a GPU supported option. It requires Windows machine with CUDA(v9.0 recommended) and cuDNN(v7.0 recommended) installed. 
 
 ## Plaforms:
-Mac and Windows are fully supported. Android does not support training. IOS is not tested.
+Windows is almost fully supported. If you want to use GPU, CUDA and cuDNN are needed(See above). Mac should be fully supported if I have a Mac to build, but now it does not have Concat Gradient. Mac does not support GPU. Linux is not tested at all. 
+
+Android does not support any type of gradient/training. IOS is not tested a all.
 
 ## Instruction:
 Not available yet.
