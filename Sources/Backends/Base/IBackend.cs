@@ -74,6 +74,10 @@ namespace KerasSharp.Backends
 
         Tensor stack(List<Tensor> tensors, int? axis);
 
+        Tensor slice(Tensor x, Tensor start, Tensor size);
+
+        List<Tensor> split(Tensor x, Tensor sizesSplit, Tensor axis, int numSplit);
+
         Tensor dropout(Tensor p, double keep_prob, int[] noise_shape, int? seed);
 
         Tensor relu(Tensor x);

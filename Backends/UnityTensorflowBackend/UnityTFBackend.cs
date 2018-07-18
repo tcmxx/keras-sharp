@@ -61,6 +61,7 @@ namespace KerasSharp.Backends
         // for various names (e.g. layer names).
         private Dictionary<TFGraph, Dictionary<string, int>> _GRAPH_UID_DICTS = new Dictionary<TFGraph, Dictionary<string, int>>();
 
+        private List<TFOperation> all_init_operations = new List<TFOperation>(); //temperary for saving all intiialization for calling of try_initalize_variables()
 
         public UnityTFBackend()
         {
@@ -420,6 +421,23 @@ namespace KerasSharp.Backends
                 alloutputs[i] = In(tensors[i]);
             }
             return Out(Graph.Pack(alloutputs,axis));
+        }
+
+        public Tensor slice(Tensor x, Tensor start, Tensor size)
+        {
+            return Out(Graph.Slice(In(x), In(start), In(size)));
+        }
+
+        public List<Tensor> split(Tensor x, Tensor sizesSplit, Tensor axis, int numSplit)
+        {
+
+            var tensors = Graph.SplitV(In(x), In(sizesSplit), In(axis),numSplit);
+            List<Tensor> results = new List<Tensor>();
+            foreach(var t in tensors)
+            {
+                results.Add(Out(t));
+            }
+            return results;
         }
 
         public Tensor one_hot(Tensor x, Tensor depth, Tensor on, Tensor off)
@@ -1370,9 +1388,17 @@ namespace KerasSharp.Backends
             try
             {
                 // Initialize variables if necessary
+                if (all_init_operations == null)
+                    all_init_operations = new List<TFOperation>();
                 TFOperation[] ops = Graph.GetGlobalVariablesInitializer();
-                if (ops.Length > 0)
-                    Session.Run(new TFOutput[] { }, new TFTensor[] { }, new TFOutput[] { }, ops);
+
+                foreach(var o in ops)
+                {
+                    //the operation returned by GetGlobalVariablesInitializer() will only be returned once. We need all of them.
+                    all_init_operations.Add(o);
+                }
+                if (all_init_operations.Count > 0)
+                    Session.Run(new TFOutput[] { }, new TFTensor[] { }, new TFOutput[] { }, all_init_operations.ToArray());
             }
             catch
             {
