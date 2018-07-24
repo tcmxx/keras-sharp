@@ -96,19 +96,18 @@ namespace KerasSharp.Layers
                         throw new Exception("InputLayer was provided an input_tensor argument, but its input shape " +
                             "cannot be automatically inferred. You should pass an input_shape or batch_input_shape argument.");
                 }
-
-                if (batch_input_shape == null)
-                {
-                    if (input_shape == null)
-                        throw new Exception("An Input layer should be passed either a `batch_input_shape` or an `input_shape`.");
-                }
-                else
-                {
-                    batch_input_shape = batch_size.Concatenate(input_shape);
-                }
             }
+            if (batch_input_shape == null)
+            {
+                if (input_shape == null)
+                    throw new Exception("An Input layer should be passed either a `batch_input_shape` or an `input_shape`.");
+                else if (batch_size != null && input_shape != null)
+                    batch_input_shape = batch_size.Concatenate(input_shape);
+                else if (input_shape != null)
+                    batch_input_shape = new int?[] { null }.Concatenate(input_shape);
 
-
+            }
+            
             this.batch_input_shape = batch_input_shape;
             //this.dtype = dtype.Value;
 

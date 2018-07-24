@@ -854,7 +854,8 @@ namespace KerasSharp.Engine.Topology
         {
             if (mask == null)
                 masks = inputs.Select(x => (Tensor)x).ToList();
-
+            else
+                masks = mask;
             string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
             cache_key += '_' + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
 
@@ -870,6 +871,8 @@ namespace KerasSharp.Engine.Topology
         {
             if (mask == null)
                 masks = inputs.Select(x => (Tensor)null).ToList();
+            else
+                masks = mask;
 
             string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
             cache_key += '_' + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
@@ -1108,7 +1111,7 @@ namespace KerasSharp.Engine.Topology
                                 {
                                     var xt = reference_output_tensors[j];
                                     var yt = output_tensors[j];
-                                    var mt = output_masks[j];
+                                    var mt = output_masks?[j];
                                     tensor_map[UnityTFUtils.GetId(xt)] = ValueTuple.Create(yt, mt);
                                 }
                             }

@@ -452,26 +452,28 @@ namespace KerasSharp.Engine.Topology
                     // Raise exceptions in case the input != compatible
                     // with the input_spec specified in the layer constructor.
                     this.assert_input_compatibility(inputs);
+
+                    // Collect input shapes to build layer.
+                    var input_shapes = new List<int?[]>();
+                    foreach (Tensor x_elem in inputs)
+                    {
+                        if (x_elem._keras_shape != null)
+                            input_shapes.Add(x_elem._keras_shape);
+                        else if (x_elem.int_shape != null)
+                            input_shapes.Add(K.int_shape(x_elem));
+                        else
+                            throw new Exception($"You tried to call layer {this.name}. This layer has no information about its expected input shape, and thus cannot be built. You can build it manually via: `layer.build(batch_input_shape)`");
+                    }
+
+                    this.build(input_shapes);
+                    this.built = true;
+
+                    // Load weights that were specified at layer instantiation.
+                    if (this._initial_weights != null)
+                        this.set_weights(this._initial_weights);
                 }
 
-                // Collect input shapes to build layer.
-                var input_shapes = new List<int?[]>();
-                foreach (Tensor x_elem in inputs)
-                {
-                    if (x_elem._keras_shape != null)
-                        input_shapes.Add(x_elem._keras_shape);
-                    else if (x_elem.int_shape != null)
-                        input_shapes.Add(K.int_shape(x_elem));
-                    else
-                        throw new Exception($"You tried to call layer {this.name}. This layer has no information about its expected input shape, and thus cannot be built. You can build it manually via: `layer.build(batch_input_shape)`");
-                }
 
-                this.build(input_shapes);
-                this.built = true;
-
-                // Load weights that were specified at layer instantiation.
-                if (this._initial_weights != null)
-                    this.set_weights(this._initial_weights);
 
                 // Raise exceptions in case the input != compatible
                 // with the input_spec set at build time.
