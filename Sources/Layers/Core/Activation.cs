@@ -30,6 +30,7 @@ namespace KerasSharp
 {
     using System.Collections.Generic;
     using System.Runtime.Serialization;
+    using KerasSharp.Activations;
     using KerasSharp.Engine.Topology;
 
     /// <summary>
@@ -77,6 +78,36 @@ namespace KerasSharp
             return activationFunction;
         }*/
 
+        public enum ActivationFunction
+        {
+            ReLU,
+            ELU,
+            Sigmoid,
+            None
+        }
+        public static IActivationFunction GetActivationFunction(ActivationFunction activationFunction)
+        {
+            IActivationFunction result;
+            switch (activationFunction)
+            {
+                case ActivationFunction.ELU:
+                    result = new ELU();
+                    break;
+                case ActivationFunction.ReLU:
+                    result = new ReLU();
+                    break;
+                case ActivationFunction.Sigmoid:
+                    result = new Sigmoid();
+                    break;
+                case ActivationFunction.None:
+                    result = null;
+                    break;
+                default:
+                    result = new ReLU();
+                    break;
+            }
+            return result;
+        }
         protected override List<Tensor> InnerCall(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
         {
             return activation.Call(inputs, mask);

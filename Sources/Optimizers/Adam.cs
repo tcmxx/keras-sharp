@@ -49,20 +49,27 @@ namespace KerasSharp.Optimizers
         private double initial_decay;
         private double epsilon;
 
+        private string nameScope;
+
         public Adam(double lr = 0.001, double beta_1 = 0.9, double beta_2 = 0.999, double epsilon = 1e-8, double decay = 0.0)
         {
-            this.iterations = K.variable(0f, name: "iterations");
-            this.lr = K.variable(lr, name: "lr");
-            this.beta_1 = K.variable(beta_1, name: "beta_1");
-            this.beta_2 = K.variable(beta_2, name: "beta_2");
-            this.epsilon = epsilon;
-            this.decay = K.variable(decay, name: "decay");
-            this.initial_decay = decay;
+            this.nameScope = "adam" + K.get_uid("adam");
+            using (K.name_scope(nameScope))
+            {
+                this.iterations = K.variable(0f, name: "iterations");
+                this.lr = K.variable(lr, name: "lr");
+                this.beta_1 = K.variable(beta_1, name: "beta_1");
+                this.beta_2 = K.variable(beta_2, name: "beta_2");
+                this.epsilon = epsilon;
+                this.decay = K.variable(decay, name: "decay");
+                this.initial_decay = decay;
+            }
+            
         }
 
         public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
         {
-            using (K.name_scope($"adam"))
+            using (K.name_scope(nameScope))
             {
                 var grads = this.get_gradients(loss, param);
                 this.updates = new List<List<Tensor>> { new List<Tensor> { K.update_add(this.iterations, 1f, "iterations/update") } };

@@ -319,18 +319,27 @@ namespace KerasSharp.Backends
 
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L2792
 
-            // Note: tf.nn.sigmoid_cross_entropy_with_logits
-            // expects logits, Keras expects probabilities.
-            if (!from_logits)
+            using (name_scope("BinaryCrossEntroy" + get_uid("BinaryCrossEntroy")))
             {
-                // transform back to logits
-                TFOutput _epsilon = _constant(EPS, dtype: dtype);
-                _output = Graph.Maximum(_output, _epsilon);
-                _output = Graph.Minimum(_output, Graph.Sub(_constant(1, dtype: dtype), _epsilon));
-                _output = Graph.Log(Graph.Div(_output, Graph.Sub(_constant(1, dtype: dtype), _output)));
-            }
+                // Note: tf.nn.sigmoid_cross_entropy_with_logits
+                // expects logits, Keras expects probabilities.
+                if (!from_logits)
+                {
+                    // transform back to logits
+                    TFOutput _epsilon = _constant(EPS, dtype: dtype);
+                    _output = Graph.Maximum(_output, _epsilon);
+                    _output = Graph.Minimum(_output, Graph.Sub(_constant(1, dtype: dtype), _epsilon));
+                    _output = Graph.Log(Graph.Div(_output, Graph.Sub(_constant(1, dtype: dtype), _output)));
+                }
 
-            return Out(Graph.SigmoidCrossEntropyWithLogits(labels: _target, logits: _output));
+                //return Out(Graph.SigmoidCrossEntropyWithLogits(labels: _target, logits: _output));
+                //tensorflow uses Select operation for SigmoidCrossEntropyWithLogits, which does not have a gradient in c++ library yet. Reimplmeent this:
+                var constZero = constant(0.0f, new int[] { }, output.dtype);
+                var result = Out(Graph.Maximum(_output, In(constZero)))
+                    - Out(_output) * target +
+                    log(1 + exp(constZero - abs(output)));
+                return result;
+            }
         }
 
         public Tensor cast(Tensor x, DataType dataType)
@@ -409,7 +418,7 @@ namespace KerasSharp.Backends
                 alloutputs[i] = In(tensors[i]);
             }
             return Out(Graph.Concat(_constant(axis), alloutputs));
-            
+
             //return batch_flatten(Out(Graph.Stack(alloutputs, axis,operName:"stackblabal")));
         }
 
@@ -420,7 +429,7 @@ namespace KerasSharp.Backends
             {
                 alloutputs[i] = In(tensors[i]);
             }
-            return Out(Graph.Pack(alloutputs,axis));
+            return Out(Graph.Pack(alloutputs, axis));
         }
 
         public Tensor slice(Tensor x, Tensor start, Tensor size)
@@ -431,9 +440,9 @@ namespace KerasSharp.Backends
         public List<Tensor> split(Tensor x, Tensor sizesSplit, Tensor axis, int numSplit)
         {
 
-            var tensors = Graph.SplitV(In(x), In(sizesSplit), In(axis),numSplit);
+            var tensors = Graph.SplitV(In(x), In(sizesSplit), In(axis), numSplit);
             List<Tensor> results = new List<Tensor>();
-            foreach(var t in tensors)
+            foreach (var t in tensors)
             {
                 results.Add(Out(t));
             }
@@ -1271,12 +1280,10 @@ namespace KerasSharp.Backends
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L308
             var _dtype = In(dtype.Value);
 
-            using (var scope = name_scope("Variable", name))
+            using (var scope = name_scope( name))
             {
                 var t = new UnityTFTensor(this);
-
-
-
+                
                 //t.Output = Graph.Variable(init,operName: "var");
                 t.Output = Graph.VariableV2(TFShape.Scalar, _dtype, operName: "var");
                 var init = _constant(value, _dtype, operName: "init");
@@ -1305,22 +1312,22 @@ namespace KerasSharp.Backends
 
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L308
             var _dtype = In(dtype.Value);
+            using (var scope = name_scope(name))
+            {
+                var t = new UnityTFTensor(this);
+                t.Output = Graph.VariableV2(In(array.GetLength()), _dtype, operName: name);
 
-            var t = new UnityTFTensor(this);
-            t.Output = Graph.VariableV2(In(array.GetLength()), _dtype, operName: name);
+                //t.Output = Graph.Variable(init, operName: name);
+                string varName = t.Output.Operation.Name;
 
+                var init = _constant(array, _dtype, operName: $"{(name != null ? name : "Variable" + UnityTFUtils.GetId(t.Output).ToString())}/init");
+                init = Graph.Print(init, new[] { init }, $"initializing {varName}");
+                Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
 
-
-            //t.Output = Graph.Variable(init, operName: name);
-            string varName = t.Output.Operation.Name;
-
-            var init = _constant(array, _dtype, operName: $"{(name != null ? name : "Variable" + UnityTFUtils.GetId(t.Output).ToString())}/init");
-            init = Graph.Print(init, new[] { init }, $"initializing {varName}");
-            Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
-
-            t._keras_shape = array.GetLength().Apply(x => (int?)x);
-            t._uses_learning_phase = false;
-            return t;
+                t._keras_shape = array.GetLength().Apply(x => (int?)x);
+                t._uses_learning_phase = false;
+                return t;
+            }
         }
 
         /// <summary>
@@ -1392,7 +1399,7 @@ namespace KerasSharp.Backends
                     all_init_operations = new List<TFOperation>();
                 TFOperation[] ops = Graph.GetGlobalVariablesInitializer();
 
-                foreach(var o in ops)
+                foreach (var o in ops)
                 {
                     //the operation returned by GetGlobalVariablesInitializer() will only be returned once. We need all of them.
                     all_init_operations.Add(o);
