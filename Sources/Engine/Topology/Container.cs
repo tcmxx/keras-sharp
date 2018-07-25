@@ -850,10 +850,10 @@ namespace KerasSharp.Engine.Topology
         /// 
         /// <returns>A tensor if there is a single output, or a list of tensors if there are more than one outputs.</returns>
         /// 
-        public List<Tensor> call(List<Tensor> inputs, List<Tensor> mask = null)
+        protected override List<Tensor> InnerCall(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
         {
             if (mask == null)
-                masks = inputs.Select(x => (Tensor)x).ToList();
+                masks = inputs.Select(x => (Tensor)null).ToList();
             else
                 masks = mask;
             string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));

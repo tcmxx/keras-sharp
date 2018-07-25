@@ -491,7 +491,12 @@ namespace KerasSharp.Engine.Topology
                     {
                         // If mask is explicitly passed to __call__,
                         // we should override the default mask.
+                        // nextMask = mask;
                         nextMask = previous_mask;
+                    }
+                    else
+                    {
+                       // nextMask = previous_mask;
                     }
                 }
 
@@ -713,10 +718,11 @@ namespace KerasSharp.Engine.Topology
         {
             if (!this.supports_masking)
             {
-                if (mask != null && !(mask.Count == 1 && mask[0] == null))
+                if (mask != null)
                 {
                     foreach (Tensor m in mask)
-                        throw new Exception("Layer {this.name} does not support masking, but was passed an input_mask: " + m);
+                        if(m != null)
+                            throw new Exception("Layer {this.name} does not support masking, but was passed an input_mask: " + m);
                 }
             }
 

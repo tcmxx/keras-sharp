@@ -15,6 +15,8 @@ public class Concat : Merge {
     public Concat(int axis)
     {
         this.axis = axis;
+
+        //this.supports_masking = true;
     }
 
 
@@ -38,7 +40,11 @@ public class Concat : Merge {
 
         for(int i = 0; i < input_shapes.Count; ++i)
         {
-            for(int j = 0; j < input_shape.Length; ++i)
+            if(input_shapes[i].Length != input_shape.Length)
+            {
+                throw new Exception("Input dimensions not match. Can not concat.");
+            }
+            for(int j = 0; j < input_shape.Length; ++j)
             {
                 if(input_shape[j].HasValue && j != axis &&(!input_shapes[i][j].HasValue || input_shapes[i][j].Value != input_shape[j].Value))
                 {

@@ -71,14 +71,12 @@ namespace KerasSharp.Layers
         {
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/topology.py#L1291
 
-            this.batch_input_shape = batch_input_shape;
-            this.name = name;
-            this.sparse = sparse;
             this.input_tensor = input_tensor;
 
             this.trainable = false;
             this.built = true;
             this.sparse = sparse;
+
             if (input_shape != null && batch_input_shape != null)
                 throw new Exception("Only provide the input_shape OR batch_input_shape argument to  InputLayer, not both at the same time.");
 
@@ -161,8 +159,10 @@ namespace KerasSharp.Layers
         {
             string prefix = "";
             if (name == null)
+            {
                 prefix = "input";
-            name = prefix + "_" + K.get_uid(prefix);
+                name = prefix + "_" + K.get_uid(prefix);
+            }
             return name;
         }
 
