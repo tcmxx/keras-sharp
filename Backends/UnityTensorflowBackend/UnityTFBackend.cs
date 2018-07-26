@@ -337,7 +337,7 @@ namespace KerasSharp.Backends
                 var constZero = constant(0.0f, new int[] { }, output.dtype);
                 var result = Out(Graph.Maximum(_output, In(constZero)))
                     - Out(_output) * target +
-                    log(1 + exp(constZero - abs(output)));
+                    log(1 + exp(subtract(constZero, abs(Out(_output)))));
                 return result;
             }
         }
@@ -1280,10 +1280,10 @@ namespace KerasSharp.Backends
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L308
             var _dtype = In(dtype.Value);
 
-            using (var scope = name_scope( name))
+            using (var scope = name_scope(name))
             {
                 var t = new UnityTFTensor(this);
-                
+
                 //t.Output = Graph.Variable(init,operName: "var");
                 t.Output = Graph.VariableV2(TFShape.Scalar, _dtype, operName: "var");
                 var init = _constant(value, _dtype, operName: "init");
@@ -1443,10 +1443,13 @@ namespace KerasSharp.Backends
             // Evaluate tensor
             TFTensor[] result = Session.Run(new TFOutput[] { }, new TFTensor[] { }, new[] { output });
 
-            if (result.Length == 1)
-                return result[0].GetValue();
+            Debug.Assert(result.Length == 1);
+            var resultValue = result[0].GetValue();
+            result[0].Dispose();
+            return resultValue;
 
-            return result.Apply(x => x.GetValue());
+            //result.Apply(x => x.GetValue());
+
         }
 
 
