@@ -56,11 +56,6 @@ namespace KerasSharp.Optimizers
 
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/optimizers.py#L190
 
-        public RMSProp()
-            : this(lr: 0.001, rho: 0.9, epsilon: 1e-8, decay: 0.0)
-        {
-
-        }
 
         public RMSProp(double lr, double rho = 0.9, double epsilon = 1e-8, double decay = 0.0)
         {
@@ -72,7 +67,13 @@ namespace KerasSharp.Optimizers
             this.iterations = K.variable(0.0, name: "iterations");
         }
 
-        public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
+
+        public override void SetLearningRate(float lr)
+        {
+            K.set_value(this.lr, new float[] { lr });
+        }
+
+        public override List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
         {
             using (K.name_scope($"rmsprop"))
             {
@@ -81,7 +82,7 @@ namespace KerasSharp.Optimizers
                 List<Tensor> grads = this.get_gradients(loss, param);
                 List<int?[]> shapes = param.Select(p => K.get_variable_shape(p)).ToList();
                 List<Tensor> accumulators = shapes.Select(shape => K.zeros(shape)).ToList();
-                this.weights = accumulators;
+                this.Weights = accumulators;
                 this.updates = new List<List<Tensor>>();
 
                 Tensor lr = this.lr;

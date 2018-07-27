@@ -67,7 +67,7 @@ namespace KerasSharp.Optimizers
             
         }
 
-        public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
+        public override List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
         {
             using (K.name_scope(nameScope))
             {
@@ -85,7 +85,7 @@ namespace KerasSharp.Optimizers
                 var shapes = param.Select(p => K.get_variable_shape(p));
                 var ms = shapes.Select(shape => K.zeros(shape)).ToArray();
                 var vs = shapes.Select(shape => K.zeros(shape)).ToArray();
-                this.weights = new[] { this.iterations }.Concat(ms).Concat(vs).ToList();
+                this.Weights = new[] { this.iterations }.Concat(ms).Concat(vs).ToList();
 
                 for (int i = 0; i < param.Count; i++)
                 {
@@ -118,7 +118,7 @@ namespace KerasSharp.Optimizers
             }
         }
 
-        public void SetLearningRate(float lr)
+        public override void SetLearningRate(float lr)
         {
             K.set_value(this.lr, new float[] { lr });
         }

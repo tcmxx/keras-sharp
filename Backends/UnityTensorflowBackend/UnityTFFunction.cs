@@ -92,18 +92,20 @@ namespace KerasSharp.Backends
         public override List<Tensor> Call(List<Array> inputs)
         {
             var feed_dict = new Dictionary<Tensor, Array>();
-            foreach (var tuple in Enumerable.Zip(this.inputs, inputs, (a, b) => Tuple.Create(a, b)))
+            if (this.inputs != null && this.inputs.Count > 0)
             {
-                // if (is_sparse(tensor))
-                // {
-                //     sparse_coo = value.tocoo()
-                //     indices = np.concatenate((np.expand_dims(sparse_coo.row, 1),
-                //                               np.expand_dims(sparse_coo.col, 1)), 1)
-                //     value = (indices, sparse_coo.data, sparse_coo.shape)
-                // }
-                feed_dict[tuple.Item1] = tuple.Item2;
+                foreach (var tuple in Enumerable.Zip(this.inputs, inputs, (a, b) => Tuple.Create(a, b)))
+                {
+                    // if (is_sparse(tensor))
+                    // {
+                    //     sparse_coo = value.tocoo()
+                    //     indices = np.concatenate((np.expand_dims(sparse_coo.row, 1),
+                    //                               np.expand_dims(sparse_coo.col, 1)), 1)
+                    //     value = (indices, sparse_coo.data, sparse_coo.shape)
+                    // }
+                    feed_dict[tuple.Item1] = tuple.Item2;
+                }
             }
-
             var session = backend.Session;
 
             var init = graph.GetGlobalVariablesInitializer();
@@ -128,11 +130,13 @@ namespace KerasSharp.Backends
 
             var runner = session.GetRunner();
 
-            foreach (var o in this.outputs)
-                runner.Fetch(backend.In(o).Output);
+            if(this.outputs != null)
+                foreach (var o in this.outputs)
+                    runner.Fetch(backend.In(o).Output);
 
-            foreach (var op in this.updates_op)
-                runner.AddTarget(op);
+            if(this.updates_op != null)
+                foreach (var op in this.updates_op)
+                    runner.AddTarget(op);
 
 
             List<TFTensor> tensors = new List<TFTensor>();
@@ -192,16 +196,20 @@ namespace KerasSharp.Backends
 
             //Console.WriteLine("After:");
             //PrintVariables(feed_dict, session);
-
-            return updated.Get(0, this.outputs.Count).Select(t =>
+            if (updated != null && updated.Length > 0)
             {
-                var result = new UnityTFTensor(backend);
-                result.TensorValue = t.GetValue();
-                result.TensorType = t.TensorType;
-                return (Tensor)result;
-            }).ToList();
-
-            // Console.ReadKey();
+                return updated.Get(0, this.outputs.Count).Select(t =>
+                {
+                    var result = new UnityTFTensor(backend);
+                    result.TensorValue = t.GetValue();
+                    result.TensorType = t.TensorType;
+                    return (Tensor)result;
+                }).ToList();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private void PrintVariables(Dictionary<Tensor, Array> feed_dict, TFSession session)

@@ -407,6 +407,7 @@ namespace KerasSharp.Backends
         }
         public Tensor clip_norm(Tensor g, double clipnorm, Tensor norm)
         {
+            @switch(greater_equal(norm, clipnorm), ()=>Out(_constant(clipnorm))* g  / norm, () => g);
             throw new NotImplementedException();
         }
 

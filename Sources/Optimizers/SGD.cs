@@ -58,11 +58,6 @@ namespace KerasSharp.Optimizers
         private double initial_decay;
         private bool nesterov;
 
-        public SGD()
-            : this(0.01, 0.0, 0.0, false)
-        {
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SGD" /> class.
         /// </summary>
@@ -85,7 +80,7 @@ namespace KerasSharp.Optimizers
             this.nesterov = nesterov;
         }
 
-        public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
+        public override List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
         {
             using (K.name_scope($"SGD"))
             {
@@ -106,7 +101,7 @@ namespace KerasSharp.Optimizers
                     moments = shapes.Select(s => K.zeros(s)).ToList();
                 }
 
-                this.weights = new[] { this.iterations }.Concat(moments).ToList();
+                this.Weights = new[] { this.iterations }.Concat(moments).ToList();
 
                 for (int i = 0; i < param.Count; i++)
                 {
@@ -136,6 +131,13 @@ namespace KerasSharp.Optimizers
 
                 return this.updates;
             }
+        }
+
+
+
+        public override void SetLearningRate(float lr)
+        {
+            K.set_value(this.lr, new float[] { lr });
         }
 
     }

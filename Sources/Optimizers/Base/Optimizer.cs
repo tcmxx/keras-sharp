@@ -51,13 +51,13 @@ namespace KerasSharp.Optimizers
     public abstract class OptimizerBase
     {
         protected List<List<Tensor>> updates;
-        protected List<Tensor> weights;
+        public List<Tensor> Weights { get; protected set; }
         public double clipnorm;
         public double clipvalue;
 
         protected OptimizerBase()
         {
-            var allowed_kwargs = new[] { "clipnorm", "clipvalue" };
+            //var allowed_kwargs = new[] { "clipnorm", "clipvalue" };
 
             //foreach (var k in kwargs)
             //    if (!allowed_kwards.Contains(k))
@@ -65,10 +65,10 @@ namespace KerasSharp.Optimizers
             // this.__dict__.update(kwargs)
 
             this.updates = new List<List<Tensor>>();
-            this.weights = new List<Tensor>();
+            this.Weights = new List<Tensor>();
         }
 
-        public virtual void get_updates(object param, IWeightConstraint constraints, ILoss loss)
+        public virtual List<List<Tensor>> get_updates(List<Tensor> collected_trainable_weights, Dictionary<Tensor, IWeightConstraint> constraints, Tensor total_loss)
         {
             throw new NotImplementedException();
         }
@@ -103,7 +103,7 @@ namespace KerasSharp.Optimizers
         /// 
         public void set_weights(List<Array> weights)
         {
-            var param = this.weights;
+            var param = this.Weights;
             var weight_value_tuples = new List<ValueTuple<Tensor, Array>>();
             var param_values = K.batch_get_value(param);
 
@@ -127,7 +127,9 @@ namespace KerasSharp.Optimizers
         /// </summary>
         public List<Array> get_weights()
         {
-            return K.batch_get_value(this.weights);
+            return K.batch_get_value(this.Weights);
         }
+
+        public abstract void SetLearningRate(float lr);
     }
 }
