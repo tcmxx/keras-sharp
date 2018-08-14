@@ -62,6 +62,7 @@ namespace KerasSharp.Backends
         private Dictionary<TFGraph, Dictionary<string, int>> _GRAPH_UID_DICTS = new Dictionary<TFGraph, Dictionary<string, int>>();
 
         private List<TFOperation> all_init_operations = new List<TFOperation>(); //temperary for saving all intiialization for calling of try_initalize_variables()
+        private Dictionary<UnityTFTensor, TFOperation> variable_init_operations = new Dictionary<UnityTFTensor, TFOperation>(); //temperary for saving all intiialization of variables for calling of try_initalize_variables(List<Tensor>)
 
         public UnityTFBackend()
         {
@@ -137,6 +138,8 @@ namespace KerasSharp.Backends
             TFOutput phase = Graph.Placeholder(dtype: TFDataType.Bool, operName: "keras_learning_phase");
             _GRAPH_LEARNING_PHASES = new Dictionary<TFGraph, object>();
             _GRAPH_LEARNING_PHASES[Graph] = phase;
+
+            all_init_operations.Clear();
         }
 
 
@@ -1290,8 +1293,9 @@ namespace KerasSharp.Backends
                 var init = _constant(value, _dtype, operName: "init");
                 init = Graph.Print(init, new[] { init }, $"initializing {scope.Name}");
 
-                Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: "assign").Operation);
-
+                var initOp = Graph.Assign(t.Output, init, operName: "assign").Operation;
+                Graph.AddInitVariable(initOp);
+                variable_init_operations[t] = initOp;
                 t._keras_shape = new int?[] { };
                 t._uses_learning_phase = false;
                 return t;
@@ -1323,8 +1327,10 @@ namespace KerasSharp.Backends
 
                 var init = _constant(array, _dtype, operName: $"{(name != null ? name : "Variable" + UnityTFUtils.GetId(t.Output).ToString())}/init");
                 init = Graph.Print(init, new[] { init }, $"initializing {varName}");
-                Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
 
+                var initOp = Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation;
+                Graph.AddInitVariable(initOp);
+                variable_init_operations[t] = initOp;
                 t._keras_shape = array.GetLength().Apply(x => (int?)x);
                 t._uses_learning_phase = false;
                 return t;
@@ -1375,7 +1381,10 @@ namespace KerasSharp.Backends
 
 
             init = Graph.Print(init, new[] { init }, $"initializing {varName}");
-            Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
+            var initOp = Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation;
+            Graph.AddInitVariable(initOp);
+            variable_init_operations[t] = initOp;
+
             t._keras_shape = tensor.shape;
             t._uses_learning_phase = false;
             return t;
@@ -1412,6 +1421,26 @@ namespace KerasSharp.Backends
             {
                 // temporary workaround until changes are sent to TensorFlowSharp
             }
+        }
+
+
+        public void try_initialize_variables(List<Tensor> variables)
+        {
+            List<TFOperation> opsToRun = new List<TFOperation>();
+            foreach(var t in variables)
+            {
+                if (variable_init_operations.ContainsKey(In(t)))
+                {
+                    opsToRun.Add(variable_init_operations[In(t)]);
+                }
+                else
+                {
+                    Debug.LogWarning("varaible:" + t.name + "does not have a initializatoin operation. Ignored.");
+                }
+            }
+
+            if (opsToRun.Count > 0)
+                Session.Run(new TFOutput[] { }, new TFTensor[] { }, new TFOutput[] { }, opsToRun.ToArray());
         }
 
         public object eval(Tensor tensor)
