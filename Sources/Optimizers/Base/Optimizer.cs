@@ -51,6 +51,10 @@ namespace KerasSharp.Optimizers
     public abstract class OptimizerBase
     {
         protected List<List<Tensor>> updates;
+
+        /// <summary>
+        /// The weight tensors of the optimizer
+        /// </summary>
         public List<Tensor> Weights { get; protected set; }
         public double clipnorm;
         public double clipvalue;

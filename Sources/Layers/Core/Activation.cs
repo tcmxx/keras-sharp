@@ -83,6 +83,7 @@ namespace KerasSharp
             ReLU,
             ELU,
             Sigmoid,
+            Swish,
             None
         }
         public static IActivationFunction GetActivationFunction(ActivationFunction activationFunction)
@@ -101,6 +102,9 @@ namespace KerasSharp
                     break;
                 case ActivationFunction.None:
                     result = null;
+                    break;
+                case ActivationFunction.Swish:
+                    result = new Swish();
                     break;
                 default:
                     result = new ReLU();

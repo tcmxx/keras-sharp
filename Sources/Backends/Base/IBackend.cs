@@ -51,8 +51,7 @@ namespace KerasSharp.Backends
         Tensor batch_flatten(Tensor inputs);
 
 
-        Tensor clip(Tensor norms, int v, int maxValue);
-        Tensor clip(Tensor norms, double min_value, double max_value);
+        Tensor clip<T>(Tensor norms, T min_value, T max_value) where T : struct;
         Tensor clip(Tensor norms, Tensor min_value, Tensor max_value);
         Tensor clip_norm(Tensor g, double clipnorm, Tensor norm);
 
@@ -178,7 +177,7 @@ namespace KerasSharp.Backends
         Tensor max(Tensor tensor, int axis);
         Tensor max(Tensor x, int v, object p);
         Tensor max(Tensor x, int axis, bool keepdims);
-        Tensor maximum(double v, Tensor tensor);
+        Tensor maximum(Tensor v1, Tensor v2);
 
         Tensor min(Tensor a, Tensor b);
         Tensor min(Tensor x, int axis, bool keepdims);
@@ -247,9 +246,7 @@ namespace KerasSharp.Backends
 
 
         Tensor truncated_normal(int[] shape, double v, double stddev, DataType? dtype, int? seed);
-
-        Tensor truncated_normal(int?[] shape, double v, double stddev, DataType? dtype, int? seed);
-
+        
         Tensor not_equal<T>(Tensor weights, T v) where T : struct;
         Tensor not_equal(Tensor x, Tensor y);
 

@@ -389,14 +389,7 @@ namespace KerasSharp.Backends
             //throw new NotImplementedException();
         }
 
-        public Tensor clip(Tensor norms, int v, int maxValue)
-        {
-            TFOutput o = Graph.Maximum(In(norms), _constant(v));
-            o = Graph.Minimum(o, _constant(maxValue));
-            return Out(o);
-        }
-
-        public Tensor clip(Tensor norms, double min_value, double max_value)
+        public Tensor clip<T>(Tensor norms, T min_value, T max_value) where T: struct
         {
             TFOutput o = Graph.Maximum(In(norms), _constant(min_value));
             o = Graph.Minimum(o, _constant(max_value));
@@ -874,9 +867,10 @@ namespace KerasSharp.Backends
         }
 
 
-        public Tensor maximum(double v, Tensor tensor)
+        public Tensor maximum(Tensor v1, Tensor v2)
         {
-            throw new NotImplementedException();
+            TFOutput o = Graph.Maximum(In(v1), In(v2));
+            return Out(o);
         }
 
         /// <summary>
@@ -1230,13 +1224,27 @@ namespace KerasSharp.Backends
 
         public Tensor truncated_normal(int[] shape, double v, double stddev, DataType? dtype, int? seed)
         {
-            throw new NotImplementedException();
+            
+            if (dtype == null)
+                dtype = floatx();
+
+            var _dtype = In(dtype.Value);
+
+            if (seed == null)
+                seed = Accord.Math.Random.Generator.Random.Next(1000000);
+            int seed2 = seed.Value * 2;
+
+            using (name_scope("truncated_normal"))
+            {
+                var _shape = Graph.Const(shape.Select(x => (long)x).ToList().ToArray());
+                TFOutput u = Graph.TruncatedNormal(_shape, _dtype, seed, seed2, "truncated_normal");
+
+                return Out(Graph.Add(Graph.Mul(u, _constant(stddev, dtype: _dtype)),
+                                            _constant(v, dtype: _dtype)), name: "scaled");
+            }
+
         }
 
-        public Tensor truncated_normal(int?[] shape, double v, double stddev, DataType? dtype, int? seed)
-        {
-            throw new NotImplementedException();
-        }
 
 
         public Tensor update(Tensor x, Tensor new_x, string name = null)
@@ -1268,10 +1276,10 @@ namespace KerasSharp.Backends
         }
 
         /// <summary>
-        ///   Instantiates a variable and returns it.
+        ///   Instantiates a variable with scalar and returns it.
         /// </summary>
         /// 
-        /// <param name="value">C# array, initial value of the tensor.</param>
+        /// <param name="value">scalar value, initial value of the tensor.</param>
         /// <param name="dtype">Tensor type.</param>
         /// <param name="name">Optional name string for the tensor.</param>
         /// 
