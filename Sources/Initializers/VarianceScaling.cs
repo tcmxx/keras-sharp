@@ -130,8 +130,8 @@ namespace KerasSharp.Initializers
 
                 if (this.distribution == "normal")
                 {
-                    var stddev = Math.Sqrt(scale);
-                    return K.truncated_normal(shape, 0.0, stddev, dtype: dtype, seed: this.seed);
+                    var stddev = Math.Sqrt(1.3*scale);
+                    return K.truncated_normal(shape, 0.0, stddev, dtype: dtype, seed: this.seed, seed2: this.seed*2);
                 }
                 else
                 {

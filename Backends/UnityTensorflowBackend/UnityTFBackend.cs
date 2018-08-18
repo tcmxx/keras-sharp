@@ -615,6 +615,11 @@ namespace KerasSharp.Backends
             return Out(Graph.Log(In(x)));
         }
 
+        public Tensor stop_gradient(Tensor x, string name = null)
+        {
+            return Out(Graph.StopGradient(In(x), name));
+        }
+
 
         public Function function(List<Tensor> inputs, List<Tensor> outputs, List<List<Tensor>> updates, string name)
         {
@@ -632,6 +637,13 @@ namespace KerasSharp.Backends
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L2192
             return int_shape(x);
         }
+
+        public Tensor shape(Tensor t)
+        {
+            return Out(Graph.Shape(In(t)));
+        }
+
+
 
         public List<Tensor> gradients(Tensor loss, List<Tensor> param)
         {
@@ -855,7 +867,7 @@ namespace KerasSharp.Backends
             return Out(o);
         }
 
-        public Tensor min(Tensor a, Tensor b)
+        public Tensor minimun(Tensor a, Tensor b)
         {
             var o = Graph.Minimum(In(a), In(b));
             return Out(o);
@@ -1222,7 +1234,45 @@ namespace KerasSharp.Backends
             return Out(Graph.Tanh(In(x)));
         }
 
-        public Tensor truncated_normal(int[] shape, double v, double stddev, DataType? dtype, int? seed)
+        public Tensor standard_normal(Tensor shape, DataType? dtype, int? seed = null, int? seed2 = null)
+        {
+            if (seed == null)
+                seed = Accord.Math.Random.Generator.Random.Next(1000000);
+            if (seed2 == null)
+                seed2 = Accord.Math.Random.Generator.Random.Next(1000000);
+            if (dtype == null)
+                dtype = floatx();
+
+            var _dtype = In(dtype.Value);
+
+            using (name_scope("standard_normal"))
+            {
+                TFOutput u = Graph.RandomStandardNormal(In(shape), _dtype, seed, seed2, "standard_normal");
+
+                return Out(u);
+            }
+        }
+        public Tensor standard_normal(int[] shape, DataType? dtype, int? seed = null, int? seed2 = null)
+        {
+            if (seed == null)
+                seed = Accord.Math.Random.Generator.Random.Next(1000000);
+            if (seed2 == null)
+                seed2 = Accord.Math.Random.Generator.Random.Next(1000000);
+            if (dtype == null)
+                dtype = floatx();
+
+            var _dtype = In(dtype.Value);
+
+            using (name_scope("standard_normal"))
+            {
+                var _shape = Graph.Const(shape.Select(x => (long)x).ToList().ToArray());
+                TFOutput u = Graph.RandomStandardNormal(_shape, _dtype, seed, seed2, "standard_normal");
+
+                return Out(u);
+            }
+        }
+
+        public Tensor truncated_normal(int[] shape, double mean, double stddev, DataType? dtype, int? seed, int? seed2)
         {
             
             if (dtype == null)
@@ -1232,7 +1282,8 @@ namespace KerasSharp.Backends
 
             if (seed == null)
                 seed = Accord.Math.Random.Generator.Random.Next(1000000);
-            int seed2 = seed.Value * 2;
+            if (seed2 == null)
+                seed2 = Accord.Math.Random.Generator.Random.Next(1000000);
 
             using (name_scope("truncated_normal"))
             {
@@ -1240,7 +1291,7 @@ namespace KerasSharp.Backends
                 TFOutput u = Graph.TruncatedNormal(_shape, _dtype, seed, seed2, "truncated_normal");
 
                 return Out(Graph.Add(Graph.Mul(u, _constant(stddev, dtype: _dtype)),
-                                            _constant(v, dtype: _dtype)), name: "scaled");
+                                            _constant(mean, dtype: _dtype)), name: "scaled");
             }
 
         }

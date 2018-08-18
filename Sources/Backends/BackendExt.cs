@@ -39,11 +39,11 @@ namespace KerasSharp.Backends
         {
             //probability
             var diff = input - mean;
-            var temp1 = diff * diff;
+            var temp1 = -1.0f*diff * diff;
             temp1 = temp1 / (2 * variance);
-            temp1 = b.exp(0 - temp1);
+            temp1 = b.exp( temp1);
 
-            var temp2 = 1.0f / b.square((2 * Mathf.PI) * variance);
+            var temp2 = 1.0f / b.sqrt((2 * Mathf.PI) * variance);
             return temp1 * temp2;
         }
     }

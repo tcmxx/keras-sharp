@@ -122,7 +122,7 @@ namespace KerasSharp.Optimizers
                             new_p = p + v;
 
                         // apply constraints
-                        if (constraints.ContainsKey(p))
+                        if (constraints != null && constraints.ContainsKey(p))
                             new_p = constraints[p].Call(new_p);
 
                         updates.Add(new List<Tensor> { K.update(p, new_p, "parameter/update") });

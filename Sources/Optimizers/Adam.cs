@@ -79,8 +79,8 @@ namespace KerasSharp.Optimizers
                     lr *= (1 / (1 + this.decay * this.iterations));
 
                 Tensor t = this.iterations + 1;
-                Tensor lr_t = K.mul(lr, (K.sqrt(1 - K.pow(this.beta_2, t)) /
-                                 (1 - K.pow(this.beta_1, t))), name: "lr_t");
+                Tensor lr_t = K.mul(lr, (K.sqrt((1 - K.pow(this.beta_2, t))/ (1 - K.pow(this.beta_1, t)))
+                                 ), name: "lr_t");
 
                 var shapes = param.Select(p => K.get_variable_shape(p));
                 var ms = shapes.Select(shape => K.zeros(shape)).ToArray();

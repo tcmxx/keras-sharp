@@ -106,7 +106,7 @@ namespace KerasSharp.Optimizers
                         Tensor new_p = p - lr * g / (K.sqrt(new_a) + this.epsilon);
 
                         // apply constraints
-                        if (constraints.ContainsKey(p))
+                        if (constraints != null && constraints.ContainsKey(p))
                         {
                             IWeightConstraint c = constraints[p];
                             new_p = c.Call(new_p);

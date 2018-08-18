@@ -134,7 +134,7 @@ namespace KerasSharp.Backends
 
         Tensor subtract<T>(T a, Tensor b, string name = null);
 
-
+        Tensor shape(Tensor t);
 
         Tensor dot(Tensor a, Tensor b, string name = null);
 
@@ -179,7 +179,7 @@ namespace KerasSharp.Backends
         Tensor max(Tensor x, int axis, bool keepdims);
         Tensor maximum(Tensor v1, Tensor v2);
 
-        Tensor min(Tensor a, Tensor b);
+        Tensor minimun(Tensor a, Tensor b);
         Tensor min(Tensor x, int axis, bool keepdims);
 
         Tensor binary_crossentropy(Tensor output, Tensor target, bool from_logits = false);
@@ -239,14 +239,18 @@ namespace KerasSharp.Backends
 
         Function function(List<Tensor> inputs, List<Tensor> list, List<List<Tensor>> updates, string name);
 
+        Tensor stop_gradient(Tensor x, string name = null);
+
         Tensor update(Tensor x, Tensor new_x, string name = null);
 
         void try_initialize_variables();
         void try_initialize_variables(List<Tensor> variables);
 
 
-        Tensor truncated_normal(int[] shape, double v, double stddev, DataType? dtype, int? seed);
-        
+        Tensor truncated_normal(int[] shape, double mean, double stddev, DataType? dtype, int? seed, int? seed2);
+        Tensor standard_normal(int[] shape, DataType? dtype, int? seed = null, int? seed2 = null);
+        Tensor standard_normal(Tensor shape, DataType? dtype, int? seed = null, int? seed2 = null);
+
         Tensor not_equal<T>(Tensor weights, T v) where T : struct;
         Tensor not_equal(Tensor x, Tensor y);
 
