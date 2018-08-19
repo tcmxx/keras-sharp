@@ -73,7 +73,9 @@ namespace KerasSharp.Backends
                     else if (update.Count == 1)
                     {
                         // assumed already an op
-                        updates_ops.Add(backend.In(update[0]).Output.Operation);
+                        var op = backend.In(update[0]).Output.Operation;
+                        Debug.Assert(op != null, "Null op");
+                        updates_ops.Add(op);
                     }
                     else
                     {
@@ -111,17 +113,16 @@ namespace KerasSharp.Backends
             var init = graph.GetGlobalVariablesInitializer();
             if (init.Length > 0)
             {
-                Console.WriteLine("Initializing variables:");
+                Debug.Log("Initializing variables in function"+ name + " call:");
                 foreach (var op in init)
                 {
-                    Console.WriteLine(" - " + op.Name);
+                    Debug.Log(" - " + op.Name);
                     session.Run(new TFOutput[0], new TFTensor[0], new TFOutput[0], new[] { op });
                 }
 
-                Console.WriteLine("Operations:");
+                Debug.Log("Operations:");
                 foreach (var op in graph.GetEnumerator())
-                    Console.WriteLine(" - " + op.Name);
-                Console.WriteLine();
+                    Debug.Log(" - " + op.Name);
             }
 
             //Console.WriteLine("Before:");

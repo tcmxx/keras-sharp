@@ -45,9 +45,11 @@ namespace KerasSharp.Optimizers
         private Tensor lr;
         private Tensor beta_1;
         private Tensor beta_2;
+        private Tensor beta_1_power;
+        private Tensor beta_2_power;
         private Tensor decay;
         private double initial_decay;
-        private double epsilon;
+        private Tensor epsilon;
 
         private string nameScope;
 
@@ -58,10 +60,13 @@ namespace KerasSharp.Optimizers
             {
                 this.iterations = K.variable(0f, name: "iterations");
                 this.lr = K.variable(lr, name: "lr");
-                this.beta_1 = K.variable(beta_1, name: "beta_1");
-                this.beta_2 = K.variable(beta_2, name: "beta_2");
-                this.epsilon = epsilon;
-                this.decay = K.variable(decay, name: "decay");
+                this.beta_1_power = K.variable(beta_1, name: "beta_1_power");
+                this.beta_2_power = K.variable(beta_2, name: "beta_2_power");
+                this.beta_1 = K.constant(beta_1, name: "beta_1");
+                this.beta_2 = K.constant(beta_2, name: "beta_2");
+
+                this.epsilon = K.constant(epsilon,name:"epsilon");
+                this.decay = K.constant(decay, name: "decay");
                 this.initial_decay = decay;
             }
             
@@ -73,14 +78,18 @@ namespace KerasSharp.Optimizers
             {
                 var grads = this.get_gradients(loss, param);
                 this.updates = new List<List<Tensor>> { new List<Tensor> { K.update_add(this.iterations, 1f, "iterations/update") } };
-
+                
                 Tensor lr = this.lr;
                 if (this.initial_decay > 0)
                     lr *= (1 / (1 + this.decay * this.iterations));
 
-                Tensor t = this.iterations + 1;
-                Tensor lr_t = K.mul(lr, (K.sqrt((1 - K.pow(this.beta_2, t))/ (1 - K.pow(this.beta_1, t)))
-                                 ), name: "lr_t");
+                var beta1powerUpdated = beta_1_power * beta_1;
+                var beta2powerUpdated = beta_2_power * beta_2;
+                this.updates.Add(new List<Tensor> { K.update(beta_1_power, beta1powerUpdated, "beta1/update") });
+                this.updates.Add(new List<Tensor> { K.update(beta_2_power, beta2powerUpdated, "beta2/update") });
+                //Tensor t = this.iterations + 1;
+                //Tensor lr_t = K.mul(lr, (K.sqrt((1 - K.pow(this.beta_2, t))/ (1 - K.pow(this.beta_1, t)))
+                //                 ), name: "lr_t");
 
                 var shapes = param.Select(p => K.get_variable_shape(p));
                 var ms = shapes.Select(shape => K.zeros(shape)).ToArray();
@@ -95,7 +104,7 @@ namespace KerasSharp.Optimizers
                         var g = grads[i];
                         var m = ms[i];
                         var v = vs[i];
-                        var m_t = (this.beta_1 * m) + (1 - this.beta_1) * g;
+                        /*var m_t = (this.beta_1 * m) + (1 - this.beta_1) * g;
                         var v_t = (this.beta_2 * v) + (1 - this.beta_2) * K.square(g);
                         var p_t = K.subtract(p, lr_t * m_t / (K.sqrt(v_t) + this.epsilon), name: "p_t");
 
@@ -108,9 +117,12 @@ namespace KerasSharp.Optimizers
                         {
                             var c = constraints[p];
                             new_p = c.Call(new_p);
-                        }
+                        }*/
 
-                        this.updates.Add(new List<Tensor> { K.update(p, new_p, "parameter/update") });
+                        var apply_adam = K.apply_adam(p, m, v, beta_1_power, beta_2_power, lr, beta_1, beta_2, epsilon, g);
+
+                        //this.updates.Add(new List<Tensor> { K.update(p, new_p, "parameter/update") });
+                        this.updates.Add(new List<Tensor> { apply_adam });
                     }
                 }
 

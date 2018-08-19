@@ -39,6 +39,9 @@ namespace KerasSharp.Backends
     {
         // TODO: Rename all methods to PascalCase
 
+        Tensor apply_adam(Tensor var, Tensor m, Tensor v, Tensor beta1_power, Tensor beta2_power, Tensor lr, Tensor beta1, Tensor beta2, Tensor epsilon, Tensor grad, bool? useLocking = null, bool? useNesterov = null)
+;
+
         Tensor sqrt(Tensor x);
 
         Tensor square(Tensor w);

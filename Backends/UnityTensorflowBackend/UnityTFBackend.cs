@@ -391,15 +391,24 @@ namespace KerasSharp.Backends
 
         public Tensor clip<T>(Tensor norms, T min_value, T max_value) where T: struct
         {
-            TFOutput o = Graph.Maximum(In(norms), _constant(min_value));
-            o = Graph.Minimum(o, _constant(max_value));
-            return Out(o);
+            using (name_scope("clip_by_value"))
+            {
+                TFOutput o = Graph.Minimum(In(norms), _constant(max_value));
+                o = Graph.Maximum(o, _constant(min_value));
+                return Out(o);
+            }
+           
         }
         public Tensor clip(Tensor norms, Tensor min_value, Tensor max_value)
         {
-            TFOutput o = Graph.Maximum(In(norms), In(min_value));
-            o = Graph.Minimum(o, In(max_value));
-            return Out(o);
+
+            using (name_scope("clip_by_value"))
+            {
+                TFOutput o = Graph.Minimum(In(norms), In(max_value));
+                o = Graph.Maximum(o, In(min_value));
+                return Out(o);
+            }
+            
         }
         public Tensor clip_norm(Tensor g, double clipnorm, Tensor norm)
         {
@@ -643,7 +652,10 @@ namespace KerasSharp.Backends
             return Out(Graph.Shape(In(t)));
         }
 
-
+        public Tensor apply_adam(Tensor var, Tensor m, Tensor v, Tensor beta1_power, Tensor beta2_power, Tensor lr, Tensor beta1, Tensor beta2, Tensor epsilon, Tensor grad, bool? useLocking = null, bool? useNesterov = null)
+        {
+            return Out(Graph.ApplyAdam(In(var), In(m), In(v), In(beta1_power), In(beta2_power), In(lr), In(beta1), In(beta2), In(epsilon), In(grad), useLocking, useNesterov));
+        }
 
         public List<Tensor> gradients(Tensor loss, List<Tensor> param)
         {
