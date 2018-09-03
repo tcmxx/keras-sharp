@@ -246,7 +246,7 @@ namespace KerasSharp.Backends
 
         Tensor update(Tensor x, Tensor new_x, string name = null);
 
-        void try_initialize_variables();
+        void try_initialize_variables(bool onlyCreatedVaraibles);
         void try_initialize_variables(List<Tensor> variables);
 
 

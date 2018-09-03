@@ -83,7 +83,7 @@ namespace KerasSharp.Backends
             {
                 Debug.LogError("Exception in UnityTFBackend() when creating a Session:" + e.Message);
             }
-#if UNITY_ANDROID
+#if UNITY_ANDROID  && !UNITY_EDITOR
 // This needs to ba called only once and will raise an exception if not
         try{
             TensorFlowSharp.Android.NativeBinding.Init();
@@ -1471,7 +1471,7 @@ namespace KerasSharp.Backends
             return Out(Graph.Transpose(In(tensor).Output, _constant(perm)));
         }
 
-        public void try_initialize_variables()
+        public void try_initialize_variables(bool onlyNewVaraibles)
         {
             try
             {
@@ -1485,7 +1485,9 @@ namespace KerasSharp.Backends
                     //the operation returned by GetGlobalVariablesInitializer() will only be returned once. We need all of them.
                     all_init_operations.Add(o);
                 }
-                if (all_init_operations.Count > 0)
+                if (onlyNewVaraibles && ops.Length > 0)
+                    Session.Run(new TFOutput[] { }, new TFTensor[] { }, new TFOutput[] { }, ops);
+                else if (all_init_operations.Count > 0)
                     Session.Run(new TFOutput[] { }, new TFTensor[] { }, new TFOutput[] { }, all_init_operations.ToArray());
             }
             catch
