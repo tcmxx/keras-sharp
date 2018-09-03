@@ -4,6 +4,8 @@ Still work in progress. This is heavily modified version of KerasSharp repo, for
 
 It is made for Aalto University's Computational Intelligence in Games course and this repo: https://github.com/tcmxx/UnityTensorflowKeras.
 
+## Tested Unity Version: 2018.1.6f1
+
 ## Installation:
 1. Copy the whole repo to Assets folder of Unity project.
 2. Import the TensorflowSharp plugin assets:
