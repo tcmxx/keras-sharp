@@ -46,5 +46,14 @@ namespace KerasSharp.Backends
             var temp2 = 1.0f / b.sqrt((2 * Mathf.PI) * variance);
             return temp1 * temp2;
         }
+
+        public static Tensor log_normal_probability(this IBackend b, Tensor input, Tensor mean, Tensor variance, Tensor logVariance)
+        {
+            //log probability
+            var temp1 = -0.5f * b.square(input - mean) / variance;
+
+            var temp2 = -0.5f * Mathf.Log(2.0f*Mathf.PI)-0.5f*logVariance;
+            return temp1 + temp2;
+        }
     }
 }
