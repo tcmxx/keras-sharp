@@ -1215,9 +1215,9 @@ namespace KerasSharp.Backends
             return Out(Graph.Square(In(w)));
         }
 
-        public Tensor sum(Tensor x, int[] axis, bool keepdims = false, string name = null)
+        public Tensor sum(Tensor x, int[] axis = null, bool keepdims = false, string name = null)
         {
-            return Out(Graph.ReduceSum(In(x), Graph.Const(axis), keepdims, name));
+            return Out(Graph.ReduceSum(In(x), axis==null?(TFOutput?)null:Graph.Const(axis), keepdims, name));
         }
 
         public Tensor sum(Tensor x, int axis, bool keepdims = false, string name = null)
