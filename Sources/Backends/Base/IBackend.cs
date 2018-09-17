@@ -86,7 +86,7 @@ namespace KerasSharp.Backends
 
         Tensor softmax(Tensor x);
 
-
+        Tensor multinomial(Tensor x, Tensor numOfSample);
 
         Tensor reshape(Tensor x, int[] shape);
 
