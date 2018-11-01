@@ -1,4 +1,6 @@
-﻿//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
+﻿
+//
+//This is modified from KerasSharp repo for use of Unity., by Xiaoxiao Ma, Aalto University, 
 //
 // Keras-Sharp: C# port of the Keras library
 // https://github.com/cesarsouza/keras-sharp
@@ -26,34 +28,23 @@
 //    SOFTWARE.
 //
 
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using TensorFlow;
-using System;
-public static class TensorFlowSharpEx
+namespace KerasSharp.Backends
 {
+    using KerasSharp.Engine.Topology;
+    using TensorFlow;
 
-
-    // Returns range(0, rank(x)) if reduction_indices is null
-    public static TFOutput ReduceDims(this TFGraph g, TFOutput input, TFOutput? axis = null)
+    public class UnityTFDependency : Dependency
     {
-        if (axis.HasValue)
-            return axis.Value;
-
-        // Fast path: avoid creating Rank and Range ops if ndims is known.
-        long[] shape = g.GetTensorShape(input).ToArray();
-        if (shape.Length >= 0)
+        TFDependencies dependency;
+        
+        public UnityTFDependency(TFDependencies dependency)
         {
-            // The python code distinguishes between tensor and sparsetensor
-
-            var array = new int[shape.Length];
-            for (int i = 0; i < array.Length; i++)
-                array[i] = i;
-
-            return g.Const(array, TFDataType.Int32);
+            this.dependency = dependency;
         }
-        return g.Range(g.Const(0), g.Const(shape.Length), g.Const(1));
+
+        public override void Dispose()
+        {
+            dependency.Dispose();
+        }
     }
-    
 }

@@ -825,9 +825,14 @@ namespace KerasSharp.Backends
             return false;
         }
 
-        public Tensor l2_normalize(Tensor expected, int axis)
+        public Tensor l2_normalize(Tensor x, int axis)
         {
-            throw new NotImplementedException();
+            using (name_scope("l2_normalize",null))
+            {
+                var square_sum = sum(x, axis, true);
+                var inv_norm = 1.0f / sqrt(maximum(square_sum, constant(epsilon())));
+                return inv_norm * x;
+            }
         }
 
         /// <summary>
@@ -1092,7 +1097,11 @@ namespace KerasSharp.Backends
             return new TensorFlowNameScope(Graph.WithScope(name), name);
         }
 
-
+        public Dependency dependency(params Tensor[] operations)
+        {
+            var ops = operations.Select(x => In(x).Operation).ToList().ToArray();
+            return new UnityTFDependency(Graph.WithDependencies(ops));
+        }
 
         /// <summary>
         /// Returns the number of axes in a tensor, as an integer.
@@ -1308,7 +1317,7 @@ namespace KerasSharp.Backends
 
         }
 
-
+        
 
         public Tensor update(Tensor x, Tensor new_x, string name = null)
         {

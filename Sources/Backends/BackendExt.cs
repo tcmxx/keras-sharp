@@ -30,7 +30,9 @@
 namespace KerasSharp.Backends
 {
     using KerasSharp.Engine.Topology;
+    using System;
     using UnityEngine;
+    using System.Linq;
 
     public static class BackendExt
     {
@@ -54,6 +56,56 @@ namespace KerasSharp.Backends
 
             var temp2 = -0.5f * Mathf.Log(2.0f*Mathf.PI)-0.5f*logVariance;
             return temp1 + temp2;
+        }
+
+        /// <summary>
+        /// https://github.com/taki0112/Spectral_Normalization-Tensorflow
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="w">the weight to be normalized. It need to be at least 2D</param>
+        /// <param name="iteration"></param>
+        /// <returns>normalized weight</returns>
+        public static Tensor spectral_norm(this IBackend b, Tensor w, int iteration = 1)
+        {
+            using (b.name_scope("SpectralNormalization" + b.get_uid("SpectralNormalization")))
+            {
+                var wShape = w.shape;
+                var uShape = new int[] { 1, wShape[wShape.Length - 1].Value };
+                w = b.reshape(w, new int[2] { -1, wShape[wShape.Length - 1].Value });
+
+                var initailzer = new Initializers.RandomNormal();
+                var u = b.variable(tensor: initailzer.Call(uShape), name: "U");
+
+                Tensor uHat = u;
+                Tensor vHat = null;
+
+                for (int i = 0; i < iteration; ++i)
+                {
+                    // power iteration
+                    //Usually iteration = 1 will be enough
+                    var v_ = b.dot(uHat, b.transpose(w, new int[] { 1, 0 }));
+                    vHat = b.l2_normalize(v_, 1);
+
+                    var u_ = b.dot(vHat, w);
+                    uHat = b.l2_normalize(u_, 1);
+                }
+
+                uHat = b.stop_gradient(uHat);
+                vHat = b.stop_gradient(vHat);
+
+                var sigma = b.dot(b.dot(vHat, w), b.transpose(uHat, new int[] { 1, 0 }));
+
+                var update = b.update(u, uHat);
+
+                Tensor wNorm = null;
+                using (b.dependency(update))
+                {
+                    wNorm = w / sigma;
+                    wNorm = b.reshape(wNorm, wShape.Select(x => x.Value).ToArray());
+                }
+
+                return wNorm;
+            }
         }
     }
 }

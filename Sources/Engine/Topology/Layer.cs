@@ -459,7 +459,8 @@ namespace KerasSharp.Engine.Topology
                     {
                         if (x_elem._keras_shape != null)
                             input_shapes.Add(x_elem._keras_shape);
-                        else if (x_elem.int_shape != null)
+                        //else if (x_elem.int_shape != null)
+                         else if (x_elem.shape != null) //changed to use shape directly
                             input_shapes.Add(K.int_shape(x_elem));
                         else
                             throw new Exception($"You tried to call layer {this.name}. This layer has no information about its expected input shape, and thus cannot be built. You can build it manually via: `layer.build(batch_input_shape)`");

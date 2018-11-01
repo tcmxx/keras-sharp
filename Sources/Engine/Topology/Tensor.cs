@@ -46,7 +46,7 @@ namespace KerasSharp.Engine.Topology
         public IBackend K;
         public int?[] _keras_shape;
         public bool _uses_learning_phase;
-        public int?[] int_shape { get { return shape; } }   //changed so that the shape is available for non Layer tensors. Might cause issue...
+        //public int?[] int_shape { get { return shape; } }   //changed so that the shape is available for non Layer tensors. Might cause issue...
         public ValueTuple<Layer, int, int>? _keras_history    //layer node_index, tensor_index
         {
             get;

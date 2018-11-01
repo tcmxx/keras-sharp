@@ -39,6 +39,7 @@ namespace KerasSharp
     using KerasSharp.Initializers;
     using KerasSharp.Regularizers;
     using static Backends.Current;
+    using KerasSharp.Backends;
 
     /// <summary>
     ///   Just your regular densely-connected NN layer.
@@ -77,6 +78,7 @@ namespace KerasSharp
         public IWeightConstraint kernel_constraint;
         public IWeightConstraint bias_constraint;
 
+        public int spectral_norm_iteration = 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Dense"/> class.
@@ -88,12 +90,13 @@ namespace KerasSharp
         /// <param name="input_shape">The input shape.</param>
         /// <param name="activation">The activation function to use.</param>
         /// <param name="use_bias">Whether the layer uses a bias vector.</param>
+        /// <param name="spectral_norm_iteration">Whether the layer uses a bias vector.</param>
         /// 
         public Dense(int units, IActivationFunction activation = null, bool use_bias = true,
             IWeightInitializer kernel_initializer = null, IWeightInitializer bias_initializer = null,
             IWeightRegularizer kernel_regularizer = null, IWeightRegularizer bias_regularizer = null, IWeightRegularizer activity_regularizer = null,
             IWeightConstraint kernel_constraint = null, IWeightConstraint bias_constraint = null,
-            int? input_dim = null, int?[] input_shape = null, int?[] batch_input_shape = null)
+            int? input_dim = null, int?[] input_shape = null, int?[] batch_input_shape = null, int spectral_norm_iteration = 0)
             : base(input_dim: input_dim, input_shape: input_shape, batch_input_shape: batch_input_shape)
         {
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/layers/core.py#L791
@@ -120,6 +123,7 @@ namespace KerasSharp
             this.input_spec = new List<InputSpec>();
             this.input_spec.Add(new InputSpec(min_ndim: 2));
             this.supports_masking = true;
+            this.spectral_norm_iteration = spectral_norm_iteration;
         }
 
         /*/// <summary>
@@ -182,7 +186,12 @@ namespace KerasSharp
         protected override Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
         {
             // https://github.com/fchollet/keras/blob/2382f788b4f14646fa8b6b2d8d65f1fc138b35c4/keras/layers/core.py#L840
-            Tensor output = K.dot(inputs, this.kernel, name: null);
+            Tensor output = null;
+            if(spectral_norm_iteration <= 0)
+                output = K.dot(inputs, this.kernel, name: null);
+            else
+                output = K.dot(inputs, K.spectral_norm(this.kernel,spectral_norm_iteration), name: null);
+
 
             if (this.use_bias)
                 output = K.bias_add(output, this.bias, name: null);

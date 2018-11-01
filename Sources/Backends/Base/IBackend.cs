@@ -165,7 +165,7 @@ namespace KerasSharp.Backends
 
         Tensor random_uniform(int[] shape, double minval = 0.0, double maxval = 1.0, DataType? dtype = null, int? seed = null, string name = null);
 
-        Tensor l2_normalize(Tensor expected, int axis);
+        Tensor l2_normalize(Tensor x, int axis);
 
         Tensor minus(Tensor tensor);
 
@@ -200,6 +200,7 @@ namespace KerasSharp.Backends
         Tensor constant<T>(T value, int[] shape = null, DataType? dtype = null, string name = null);
 
         Tensor transpose(Tensor tensor);
+        Tensor transpose(Tensor tensor, int[] perm);
 
         int get_uid(string prefix);
 
@@ -209,7 +210,7 @@ namespace KerasSharp.Backends
 
 
         NameScope name_scope(string name);
-
+        Dependency dependency(params Tensor[] operations);
 
 
         Tensor identity(Tensor x, string name = null);

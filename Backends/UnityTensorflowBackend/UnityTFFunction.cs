@@ -113,16 +113,16 @@ namespace KerasSharp.Backends
             var init = graph.GetGlobalVariablesInitializer();
             if (init.Length > 0)
             {
-                Debug.Log("Initializing variables in function"+ name + " call:");
+                Debug.Log("Initializing variables in function"+ name + " call.");
                 foreach (var op in init)
                 {
-                    Debug.Log(" - " + op.Name);
+                    //Debug.Log(" - " + op.Name);
                     session.Run(new TFOutput[0], new TFTensor[0], new TFOutput[0], new[] { op });
                 }
-
-                Debug.Log("Operations:");
-                foreach (var op in graph.GetEnumerator())
-                    Debug.Log(" - " + op.Name);
+                Debug.Log("Initializing variables in function" + name + " done.");
+                //Debug.Log("Operations:");
+                //foreach (var op in graph.GetEnumerator())
+                //   Debug.Log(" - " + op.Name);
             }
 
             //Console.WriteLine("Before:");
